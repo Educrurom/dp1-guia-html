@@ -1,0 +1,2152 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Chuleta DP1</title>
+<style>
+/* Diseño: barra lateral con buscador fijo + columna de lectura; color por categoría (Java/SQL/Tests/React/Aula) */
+:root{
+  --bg:#f3f5f7;--surface:#ffffff;--surface-2:#eef1f4;--fg:#16202a;--muted:#5b6876;--line:#d8dee5;
+  --focus:#2563eb;
+  --java:#c2410c;--java-soft:#fdeee5;
+  --sql:#1d5fbf;--sql-soft:#e6effc;
+  --test:#7c3aed;--test-soft:#f0eafe;
+  --react:#0e7490;--react-soft:#e2f4f8;
+  --setup:#3f6212;--setup-soft:#eef5e2;
+  --read:#9d174d;--read-soft:#fbe8f0;
+  --plan:#475569;--plan-soft:#eceff3;
+  --ex:#4338ca;--ex-soft:#e9e8fc;
+  --warn:#9a5b00;--warn-soft:#fff4dc;--warn-line:#e0a020;
+  --ok:#17733b;--ok-soft:#e3f5ea;
+  --mine:#6b4e00;--mine-soft:#fff9db;--mine-line:#d4b106;
+  --code-bg:#0f172a;--code-fg:#e2e8f0;--code-head:#1e293b;--code-muted:#94a3b8;
+  --tk-kw:#f9a8d4;--tk-ann:#fbbf24;--tk-str:#86efac;--tk-com:#94a3b8;--tk-num:#93c5fd;--tk-type:#7dd3fc;--tk-tag:#fda4af;
+  --hit:#fde047;--hit-fg:#111827;--hit-cur:#f97316;--hit-cur-fg:#111827;
+  --mono:ui-monospace,"JetBrains Mono","Cascadia Code","DejaVu Sans Mono",Consolas,monospace;
+  --sans:system-ui,-apple-system,"Segoe UI",Ubuntu,"DejaVu Sans",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0d1117;--surface:#161b22;--surface-2:#1c232c;--fg:#e6edf3;--muted:#9aa7b4;--line:#2d3640;--focus:#60a5fa;
+  --java:#fb923c;--java-soft:#3a1f10;--sql:#60a5fa;--sql-soft:#0f2540;--test:#a78bfa;--test-soft:#251a45;
+  --react:#22d3ee;--react-soft:#0b2e36;--setup:#a3e635;--setup-soft:#1e2a0c;--read:#f472b6;--read-soft:#3a1028;
+  --plan:#94a3b8;--plan-soft:#1e252e;--ex:#a5b4fc;--ex-soft:#1e1b4b;--warn:#fbbf24;--warn-soft:#332507;--warn-line:#d29922;
+  --ok:#4ade80;--ok-soft:#0f2e1b;--mine:#fde68a;--mine-soft:#2e2808;--mine-line:#c9a20a;
+  --code-bg:#0a0f1a;--code-head:#141c2b;color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0d1117;--surface:#161b22;--surface-2:#1c232c;--fg:#e6edf3;--muted:#9aa7b4;--line:#2d3640;--focus:#60a5fa;
+  --java:#fb923c;--java-soft:#3a1f10;--sql:#60a5fa;--sql-soft:#0f2540;--test:#a78bfa;--test-soft:#251a45;
+  --react:#22d3ee;--react-soft:#0b2e36;--setup:#a3e635;--setup-soft:#1e2a0c;--read:#f472b6;--read-soft:#3a1028;
+  --plan:#94a3b8;--plan-soft:#1e252e;--ex:#a5b4fc;--ex-soft:#1e1b4b;--warn:#fbbf24;--warn-soft:#332507;--warn-line:#d29922;
+  --ok:#4ade80;--ok-soft:#0f2e1b;--mine:#fde68a;--mine-soft:#2e2808;--mine-line:#c9a20a;
+  --code-bg:#0a0f1a;--code-head:#141c2b;color-scheme:dark}
+*{box-sizing:border-box}
+html{scroll-padding-top:16px}
+body{margin:0;background:var(--bg);color:var(--fg);font:15.5px/1.6 var(--sans);-webkit-font-smoothing:antialiased}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+.layout{display:grid;grid-template-columns:300px minmax(0,1fr);min-height:100vh}
+
+/* ---------- Barra lateral ---------- */
+aside{position:sticky;top:0;height:100vh;display:flex;flex-direction:column;background:var(--surface);border-right:1px solid var(--line)}
+.side-top{padding:16px 14px 12px;border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin:0 2px 12px}
+.brand b{font:800 15px var(--sans);letter-spacing:.02em}
+.brand small{font:600 11px var(--mono);color:var(--muted)}
+.search{position:relative}
+#q{width:100%;padding:10px 12px 10px 34px;border:1.5px solid var(--line);border-radius:10px;background:var(--bg);color:var(--fg);font:15px var(--sans)}
+#q:focus{border-color:var(--focus);outline:none;box-shadow:0 0 0 3px color-mix(in srgb,var(--focus) 25%,transparent)}
+.search svg{position:absolute;left:11px;top:50%;transform:translateY(-50%);width:15px;height:15px;color:var(--muted)}
+.search-bar{display:flex;align-items:center;gap:6px;margin-top:8px;min-height:28px}
+#count{flex:1;font:600 12.5px var(--mono);color:var(--muted)}
+#count.none{color:var(--warn)}
+.nav-btn{border:1px solid var(--line);background:var(--bg);color:var(--fg);border-radius:7px;width:30px;height:28px;cursor:pointer;font:700 13px var(--sans)}
+.nav-btn:hover{border-color:var(--focus)}
+.nav-btn:disabled{opacity:.4;cursor:default}
+.opts{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:8px;font-size:12.5px;color:var(--muted)}
+.opts label{display:flex;gap:6px;align-items:center;cursor:pointer}
+.hint{display:grid;grid-template-columns:1fr 1fr;gap:4px 10px;font:11.5px var(--sans);color:var(--muted);margin-top:10px}
+.hint span{white-space:nowrap}
+.hint kbd{font:600 11px var(--mono);border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;padding:0 4px;background:var(--bg)}
+.toc{overflow:auto;padding:10px 8px 16px;flex:1}
+.toc ol{list-style:none;margin:0;padding:0}
+.toc>ol>li{margin:1px 0}
+.toc a{display:flex;gap:8px;align-items:baseline;padding:5px 8px;border-radius:7px;text-decoration:none;color:var(--fg);font-size:14px;line-height:1.35}
+.toc a:hover{background:var(--surface-2)}
+.toc .num{font:700 11.5px var(--mono);min-width:22px;text-align:center;padding:1px 4px;border-radius:5px;color:var(--c);background:var(--cs)}
+.toc ol ol a{padding:3px 8px 3px 38px;font-size:13px;color:var(--muted)}
+.toc a.active{background:var(--cs);color:var(--c);font-weight:650}
+.toc ol ol a.active{background:transparent;color:var(--c);font-weight:600}
+.toc li.dim a{opacity:.32}
+.side-foot{padding:10px 14px;border-top:1px solid var(--line);display:flex;gap:8px}
+.side-foot button{flex:1;padding:7px 8px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--fg);font:600 12px var(--sans);cursor:pointer}
+.side-foot button:hover{border-color:var(--focus)}
+
+/* Colores por categoría */
+.cat-java{--c:var(--java);--cs:var(--java-soft)}.cat-sql{--c:var(--sql);--cs:var(--sql-soft)}
+.cat-test{--c:var(--test);--cs:var(--test-soft)}.cat-react{--c:var(--react);--cs:var(--react-soft)}
+.cat-setup{--c:var(--setup);--cs:var(--setup-soft)}.cat-read{--c:var(--read);--cs:var(--read-soft)}
+.cat-plan{--c:var(--plan);--cs:var(--plan-soft)}.cat-ex{--c:var(--ex);--cs:var(--ex-soft)}
+
+/* ---------- Contenido ---------- */
+main{padding:28px clamp(16px,4vw,48px) 120px;min-width:0}
+.wrap{max-width:980px;margin:0 auto}
+main>.wrap>h1{font:800 clamp(24px,3vw,32px)/1.15 var(--sans);margin:0 0 10px;letter-spacing:-.01em}
+.sec{margin-top:28px;background:var(--surface);border:1px solid var(--line);border-top:4px solid var(--c);border-radius:12px;padding:6px clamp(14px,2.5vw,26px) 20px}
+.sec h2{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font:800 22px/1.25 var(--sans);margin:14px 0 12px;color:var(--fg);letter-spacing:-.005em}
+.chip{font:700 11px/1 var(--mono);letter-spacing:.06em;text-transform:uppercase;padding:5px 8px;border-radius:6px;background:var(--cs);color:var(--c)}
+.sec h3{font:700 16.5px/1.3 var(--sans);margin:26px 0 8px;padding-left:10px;border-left:3px solid var(--c)}
+p{margin:8px 0}
+ul,ol{padding-left:22px}
+li{margin:3px 0}
+strong{font-weight:700}
+code{font:13.5px var(--mono);background:var(--surface-2);border:1px solid var(--line);padding:0 5px;border-radius:5px;overflow-wrap:anywhere}
+.sec code{background:var(--cs);border-color:transparent;color:var(--fg)}
+
+/* Checklist */
+.checklist{background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:10px 12px 8px;margin:6px 0 18px}
+.checklist h3.cl-h{border:0;padding:0;margin:0 0 6px;font:700 12px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--c);display:flex;gap:10px;align-items:center}
+.prog{font:700 12px var(--mono);color:var(--muted);letter-spacing:0}
+.prog.full{color:var(--ok)}
+.bar{flex:1;height:5px;border-radius:9px;background:var(--line);overflow:hidden;max-width:160px}
+.bar i{display:block;height:100%;width:0;background:var(--c);transition:width .2s}
+.checklist ul{list-style:none;margin:0;padding:0;columns:2 340px;column-gap:18px}
+li.task{break-inside:avoid;margin:0}
+li.task label{display:flex;gap:9px;align-items:flex-start;padding:4px 6px;border-radius:6px;cursor:pointer;font-size:14.5px;line-height:1.45}
+li.task label:hover{background:var(--surface)}
+li.task input{width:17px;height:17px;margin:2px 0 0;flex:none;accent-color:var(--c);cursor:pointer}
+li.task.done span{color:var(--muted);text-decoration:line-through;text-decoration-color:color-mix(in srgb,var(--muted) 60%,transparent)}
+
+/* Avisos */
+.callout{display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px;align-items:start;padding:10px 14px;border-radius:9px;border:1px solid;margin:12px 0}
+.callout .txt{min-width:0}
+.callout .ico{flex:none;display:grid;place-items:center;width:20px;height:20px;border-radius:50%;font:800 12px var(--sans);margin-top:1px}
+.callout.warn{background:var(--warn-soft);border-color:var(--warn-line)}.callout.warn .ico{background:var(--warn-line);color:#111}
+.callout.ok{background:var(--ok-soft);border-color:color-mix(in srgb,var(--ok) 50%,transparent)}.callout.ok .ico{background:var(--ok);color:#fff}
+.callout.mine{background:var(--mine-soft);border-color:var(--mine-line);border-style:dashed}.callout.mine .ico{background:var(--mine-line);color:#111}
+blockquote.callout.info{display:block;background:var(--surface);border-color:var(--line);border-left:4px solid var(--focus);margin:0 0 6px;color:var(--muted)}
+blockquote p{margin:2px 0}
+li.li-warn{list-style:none;margin-left:-20px;padding:4px 10px;border-left:3px solid var(--warn-line);background:var(--warn-soft);border-radius:0 6px 6px 0}
+
+/* Tablas */
+.tbl{overflow-x:auto;margin:12px 0;border:1px solid var(--line);border-radius:10px}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{padding:7px 11px;text-align:left;vertical-align:top;border-bottom:1px solid var(--line)}
+th{background:var(--surface-2);font:700 12px var(--sans);letter-spacing:.03em;text-transform:uppercase;color:var(--muted);position:sticky;top:0}
+tr:last-child td{border-bottom:0}
+tbody tr:nth-child(even) td{background:color-mix(in srgb,var(--surface-2) 55%,transparent)}
+tbody tr:hover td{background:var(--cs)}
+td:first-child{font-weight:600}
+
+/* Código */
+.code{margin:12px 0;border-radius:10px;overflow:hidden;border:1px solid #1e293b;background:var(--code-bg)}
+.code-h{display:flex;justify-content:space-between;align-items:center;padding:5px 8px 5px 14px;background:var(--code-head);font:700 11px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--code-muted)}
+.copy{font:600 12px var(--sans);padding:4px 11px;border-radius:6px;border:1px solid #334155;background:#1e293b;color:#e2e8f0;cursor:pointer;letter-spacing:0;text-transform:none}
+.copy:hover{background:#334155}
+.copy.done{background:#166534;border-color:#166534}
+pre{margin:0;padding:13px 16px;overflow-x:auto;color:var(--code-fg);font:13.5px/1.6 var(--mono);tab-size:4}
+.sec pre code,pre code{background:none;border:0;padding:0;color:inherit;font:inherit}
+.tk-com{color:var(--tk-com);font-style:italic}.tk-str{color:var(--tk-str)}.tk-kw{color:var(--tk-kw)}
+.tk-ann{color:var(--tk-ann)}.tk-num{color:var(--tk-num)}.tk-type{color:var(--tk-type)}.tk-tag{color:var(--tk-tag)}
+
+/* Búsqueda: todas las coincidencias en amarillo, la actual en naranja con contorno (también sobre código oscuro) */
+mark.hit{background:var(--hit);color:var(--hit-fg);border-radius:3px;padding:0 1px;box-shadow:0 0 0 1px rgba(0,0,0,.15)}
+mark.hit.cur{background:var(--hit-cur);color:var(--hit-cur-fg);outline:2px solid var(--fg);outline-offset:1px}
+pre mark.hit{color:#111827}
+.sec.dim{display:none}
+
+/* Volver arriba */
+#top{position:fixed;right:max(18px,env(safe-area-inset-right,0px));bottom:max(18px,env(safe-area-inset-bottom,0px));width:42px;height:42px;border-radius:50%;border:1px solid var(--line);background:var(--surface);color:var(--fg);font:700 18px var(--sans);cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.12);opacity:0;pointer-events:none;transition:opacity .2s}
+#top.show{opacity:1;pointer-events:auto}
+
+@media (max-width:900px){
+  .layout{grid-template-columns:1fr}
+  aside{position:sticky;top:0;z-index:5;height:auto;max-height:none}
+  .toc,.side-foot,.hint{display:none}
+  .checklist ul{columns:1}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+</style></head><body>
+<div class="layout">
+<aside>
+  <div class="side-top">
+    <div class="brand"><b>Chuleta DP1</b><small>94 checks</small></div>
+    <div class="search">
+      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="8.5" cy="8.5" r="6"/><path d="m13 13 5 5"/></svg>
+      <input id="q" type="search" placeholder="Buscar (ej. 403, rollback)" autocomplete="off" spellcheck="false" aria-label="Buscar en la chuleta">
+    </div>
+    <div class="search-bar"><span id="count" aria-live="polite"></span>
+      <button class="nav-btn" id="prev" type="button" aria-label="Coincidencia anterior" disabled>↑</button>
+      <button class="nav-btn" id="next" type="button" aria-label="Coincidencia siguiente" disabled>↓</button></div>
+    <div class="opts"><label><input type="checkbox" id="filter"> Ocultar secciones sin resultados</label></div>
+    <div class="hint"><span><kbd>/</kbd> buscar</span><span><kbd>Enter</kbd> siguiente</span><span><kbd>⇧</kbd><kbd>Enter</kbd> anterior</span><span><kbd>Esc</kbd> borrar</span></div>
+  </div>
+  <nav class="toc" aria-label="Índice"><ol><li class="cat-setup"><a href="#0-arranque-portatil-windows-o-aula-linux"><span class="num">0</span><span class="t">ARRANQUE (portátil Windows o aula Linux)</span></a><ol><li><a href="#en-mi-portatil-windows-powershell">En mi portátil (Windows / PowerShell)</a></li><li><a href="#normas-del-control-2026-27">Normas del control (2026-27)</a></li></ol></li><li class="cat-read"><a href="#1-leer-errores-y-tests"><span class="num">1</span><span class="t">LEER ERRORES Y TESTS</span></a><ol><li><a href="#leer-mockito-en-los-tests">Leer Mockito en los tests</a></li></ol></li><li class="cat-java"><a href="#2-entidades"><span class="num">2</span><span class="t">ENTIDADES</span></a><ol><li><a href="#la-clase-ya-trae-su-propio-integer-id-g3">La clase ya trae su propio Integer id; (G3)</a></li><li><a href="#cuando-notnull">¿Cuándo @NotNull?</a></li></ol></li><li class="cat-java"><a href="#3-uml-y-relaciones"><span class="num">3</span><span class="t">UML Y RELACIONES</span></a><ol><li><a href="#leer-el-uml">Leer el UML</a></li><li><a href="#relaciones">Relaciones</a></li></ol></li><li class="cat-sql"><a href="#4-datasql-srcmainresourcesdatasql"><span class="num">4</span><span class="t">data.sql (src/main/resources/data.sql)</span></a></li><li class="cat-java"><a href="#5-repositorio-consultas"><span class="num">5</span><span class="t">REPOSITORIO: CONSULTAS</span></a><ol><li><a href="#consultas-por-nombre-del-metodo-sin-query">Consultas por nombre del método (sin @Query)</a></li><li><a href="#parametros-por-posicion-1-2-y-size">Parámetros por posición (?1, ?2) y SIZE()</a></li></ol></li><li class="cat-java"><a href="#6-servicio"><span class="num">6</span><span class="t">SERVICIO</span></a><ol><li><a href="#reglas-escritas-en-negativo">Reglas escritas en negativo</a></li><li><a href="#la-firma-no-declara-la-excepcion-anadir-throws">La firma no declara la excepción → añadir throws</a></li><li><a href="#no-puede-haber-otro-activo-salvo-el-mismo-que-se-guarda">«No puede haber otro activo, salvo el mismo que se guarda»</a></li><li><a href="#el-metodo-recibe-la-entidad-entera-usar-su-lista-sin-consulta">El método recibe la entidad entera → usar su lista, sin consulta</a></li><li><a href="#constructor-con-optionalrepository">Constructor con Optional&lt;Repository&gt;</a></li></ol></li><li class="cat-java"><a href="#6b-streams-con-su-equivalente-en-bucle"><span class="num">6b</span><span class="t">STREAMS (con su equivalente en bucle)</span></a></li><li class="cat-java"><a href="#7-controlador-codigos-http-seguridad"><span class="num">7</span><span class="t">CONTROLADOR + CÓDIGOS HTTP + SEGURIDAD</span></a><ol><li><a href="#el-servicio-devuelve-null-404-en-el-controlador-g3">El servicio devuelve null → 404 en el controlador (G3)</a></li><li><a href="#el-servicio-devuelve-optional-404-en-el-controlador">El servicio devuelve Optional → 404 en el controlador</a></li><li><a href="#post-put-delete">POST / PUT / DELETE</a></li></ol></li><li class="cat-test"><a href="#8-tests-junit-escribir-tests"><span class="num">8</span><span class="t">TESTS JUNIT (escribir tests)</span></a></li><li class="cat-react"><a href="#9-react"><span class="num">9</span><span class="t">REACT</span></a><ol><li><a href="#tabla-con-props-controles-g1-g2-g3">Tabla con props (controles G1, G2, G3)</a></li></ol></li><li class="cat-setup"><a href="#10-entrega-git"><span class="num">10</span><span class="t">ENTREGA (GIT)</span></a><ol><li><a href="#cuando-git-falla">Cuando git falla</a></li></ol></li><li class="cat-plan"><a href="#11-estrategia"><span class="num">11</span><span class="t">ESTRATEGIA</span></a></li><li class="cat-ex"><a href="#12-ejemplos-resueltos"><span class="num">12</span><span class="t">EJEMPLOS RESUELTOS</span></a><ol><li><a href="#ej-1-entidad-con-validaciones-enum-y-relaciones-simulacro">Ej. 1 · Entidad con validaciones, enum y relaciones (Simulacro)</a></li><li><a href="#ej-2-entidad-con-atributo-derivado-y-manytoone-obligatorio-g3">Ej. 2 · Entidad con atributo derivado y @ManyToOne obligatorio (G3)</a></li><li><a href="#ej-3-entidad-con-onetomany-y-notblank-g3">Ej. 3 · Entidad con @OneToMany y @NotBlank (G3)</a></li><li><a href="#ej-4-datasql-con-manytoone-y-tabla-intermedia-simulacro">Ej. 4 · data.sql con @ManyToOne y tabla intermedia (Simulacro)</a></li><li><a href="#ej-5-datasql-con-localdate-manytoone-y-onetomany-g3">Ej. 5 · data.sql con LocalDate, @ManyToOne y @OneToMany (G3)</a></li><li><a href="#ej-6-repositorio-por-nombre-con-filtro-y-agregado-g1-g2-simulacro">Ej. 6 · Repositorio: por nombre, con filtro y agregado (G1, G2, Simulacro)</a></li><li><a href="#ej-7-servicio-crud-regla-de-negocio-con-rollback-simulacro">Ej. 7 · Servicio CRUD + regla de negocio con rollback (Simulacro)</a></li><li><a href="#ej-8-regla-con-bucles-anidados-y-regla-en-negativo-g3">Ej. 8 · Regla con bucles anidados y regla en negativo (G3)</a></li><li><a href="#ej-9-servicio-con-comprobaciones-404403-y-conversion-object-simulacro">Ej. 9 · Servicio con comprobaciones 404/403 y conversión Object[] (Simulacro)</a></li><li><a href="#ej-10-servicio-que-recibe-la-entidad-y-devuelve-null-si-no-existe-g3">Ej. 10 · Servicio que recibe la entidad y devuelve null si no existe (G3)</a></li><li><a href="#ej-11-controladores-simulacro-y-g3-seguridad">Ej. 11 · Controladores (Simulacro y G3) + seguridad</a></li><li><a href="#ej-12-tests-junit-que-cazan-implementaciones-con-errores-simulacro">Ej. 12 · Tests JUnit que cazan implementaciones con errores (Simulacro)</a></li><li><a href="#ej-13-react-fetch-lista-tabla-simulacro-y-g3">Ej. 13 · React: fetch + lista + tabla (Simulacro y G3)</a></li></ol></li></ol></nav>
+  <div class="side-foot"><button id="reset" type="button">Reiniciar checklists</button><button id="theme" type="button">Claro / oscuro</button></div>
+</aside>
+<main id="content"><div class="wrap">
+<h1 id="chuleta-dp1-control-de-laboratorio">CHULETA DP1 — Control de laboratorio</h1>
+<blockquote class="callout info">
+<p>Busca con <strong>Ctrl+F</strong> por el síntoma o la palabra del enunciado.
+Las partes marcadas con ✍️ son para que las rellenes tú con lo que te ha costado.</p>
+</blockquote>
+
+<section class="sec cat-setup"><h2 id="0-arranque-portatil-windows-o-aula-linux"><span class="chip">Aula</span>0. ARRANQUE (portátil Windows o aula Linux)</h2>
+<div class="checklist"><h3 class="cl-h" id="checklist">Checklist <span class="prog"></span></h3><ul>
+<li class="task"><label><input type="checkbox" data-k="c1"><span><strong>Claude Code desactivado</strong> (<code>code --disable-extension anthropic.claude-code</code>)</span></label></li>
+<li class="task"><label><input type="checkbox" data-k="c2"><span><strong>Panel de chat de Copilot cerrado</strong>; solo sugerencias en gris</span></label></li>
+<li class="task"><label><input type="checkbox" data-k="c3"><span><code>JAVA_HOME</code> apunta al JDK 21 (<code>$env:JAVA_HOME</code>)</span></label></li>
+<li class="task"><label><input type="checkbox" data-k="c4"><span>Token de GitHub copiado y a mano</span></label></li>
+<li class="task"><label><input type="checkbox" data-k="c5"><span><code>git clone</code> del repositorio (contraseña = token)</span></label></li>
+<li class="task"><label><input type="checkbox" data-k="c6"><span><code>cd</code> a la carpeta y <code>code .</code></span></label></li>
+<li class="task"><label><input type="checkbox" data-k="c7"><span>Aceptar el módulo de Java en VS Code</span></label></li>
+<li class="task"><label><input type="checkbox" data-k="c8"><span>Instalar la extensión <strong>Lombok</strong> y reiniciar el servidor de Java</span></label></li>
+<li class="task"><label><input type="checkbox" data-k="c9"><span>Abajo a la izquierda: <strong>Java: Ready</strong></span></label></li>
+<li class="task"><label><input type="checkbox" data-k="c10"><span>Probar que salen líneas rojas y que <strong>Ctrl+.</strong> funciona</span></label></li>
+<li class="task"><label><input type="checkbox" data-k="c11"><span>Lanzar <code>./mvnw test</code> una vez (si falla por permisos: <code>chmod +x mvnw</code>)</span></label></li>
+<li class="task"><label><input type="checkbox" data-k="c12"><span>Entregar en EV la URL del repositorio</span></label></li>
+</ul></div>
+<div class="code" data-lang="bash"><div class="code-h"><span>Terminal Linux</span><button class="copy" type="button">Copiar</button></div><pre><code class="language-bash">git clone https://github.com/gii-is-DP1/&lt;repo&gt;.git   # contraseña = TOKEN de GitHub
+cd &lt;repo&gt;
+code .
+</code></pre></div>
+<ol>
+<li>Abrir un <code>.java</code> → aceptar instalar el <strong>módulo de Java</strong> (~1 min).</li>
+<li>Extensiones → instalar <strong>Lombok</strong> → aceptar reiniciar el servidor de Java.</li>
+<li>Comprobar: abajo a la izquierda <strong>«Java: Ready»</strong> y los errores salen <strong>subrayados en rojo</strong>.</li>
+<li>Probar atajos: <strong>Ctrl+.</strong> (arreglo/import), <strong>Shift+Alt+O</strong> (organizar imports), <strong>Ctrl+Espacio</strong> (autocompletar).</li>
+</ol>
+<div class="code" data-lang="bash"><div class="code-h"><span>Terminal Linux</span><button class="copy" type="button">Copiar</button></div><pre><code class="language-bash">./mvnw test -Dtest=Test1            # un test
+./mvnw test -Dtest=Test1,Test2      # varios
+chmod +x mvnw                       # si dice &quot;Permission denied&quot;
+./mvnw test &gt; salida.txt            # guardar salida para buscar en ella
+grep &quot;Caused by&quot; salida.txt | tail -3
+grep &quot;create table&quot; -A 12 salida.txt   # ver nombres reales de tablas/columnas
+</code></pre></div>
+<p>Frontend:</p>
+<div class="code" data-lang="bash"><div class="code-h"><span>Terminal Linux</span><button class="copy" type="button">Copiar</button></div><pre><code class="language-bash">cd frontend &amp;&amp; npm install    # una vez
+npm test                      # y pulsar &quot;a&quot;
+</code></pre></div>
+<h3 id="en-mi-portatil-windows-powershell">En mi portátil (Windows / PowerShell)</h3>
+<div class="code" data-lang="powershell"><div class="code-h"><span>PowerShell</span><button class="copy" type="button">Copiar</button></div><pre><code class="language-powershell">.\mvnw test &quot;-Dtest=Test1&quot;            # .\ delante y -Dtest entre comillas
+.\mvnw test &quot;-Dtest=Test1,Test2&quot;
+.\mvnw test &gt; salida.txt
+Select-String -Path salida.txt -Pattern &quot;Caused by&quot; | Select-Object -Last 3
+Select-String -Path salida.txt -Pattern &quot;create table&quot; -Context 0,12
+$env:JAVA_HOME                       # debe ser ...\jdk-21
+</code></pre></div>
+<h3 id="normas-del-control-2026-27">Normas del control (2026-27)</h3>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>✅ Permitido</th>
+<th>❌ Prohibido</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Portátil propio o del aula</td>
+<td>Hablar con nadie (mensajería, foros, chats)</td>
+</tr>
+<tr>
+<td>Material de teoría y mis apuntes</td>
+<td>Cualquier chat o asistente de IA (Claude, ChatGPT…)</td>
+</tr>
+<tr>
+<td>Internet <strong>para buscar información</strong></td>
+<td>Chat, prompts o modo agente de Copilot</td>
+</tr>
+<tr>
+<td><strong>Copilot solo en autocompletado</strong></td>
+<td><strong>Corregir errores con Copilot</strong></td>
+</tr>
+<tr>
+<td>Arreglos normales de Java con Ctrl+. (imports, <code>throws</code>…)</td>
+<td><strong>Escribir comentarios para que Copilot genere código</strong></td>
+</tr>
+</tbody>
+</table></div>
+<p class="callout warn"><span class="ico" aria-hidden="true">!</span><span class="txt">En <strong>Ctrl+.</strong> leer cada opción: «Import…», «Add throws…» → sí. «Fix using Copilot», «Explain» → <strong>NO</strong>.</span></p>
+<p class="callout warn"><span class="ico" aria-hidden="true">!</span><span class="txt">No escribir comentarios mientras programo. En Google, saltar las «Vistas creadas con IA» (o añadir <code>-ai</code>).</span></p>
+<p class="callout warn"><span class="ico" aria-hidden="true">!</span><span class="txt">Revisar cada sugerencia de Copilot con la checklist antes de aceptarla: se equivoca en imports (<code>javax</code>), cardinalidades, nombres de columnas, textos del <code>data.sql</code> y en qué excepción usar.</span></p>
+</section>
+<section class="sec cat-read"><h2 id="1-leer-errores-y-tests"><span class="chip">Leer</span>1. LEER ERRORES Y TESTS</h2>
+<div class="checklist"><h3 class="cl-h" id="checklist_1">Checklist <span class="prog"></span></h3><ul>
+<li class="task"><label><input type="checkbox" data-k="c13"><span>Leer el enunciado del ejercicio entero</span></label></li>
+<li class="task"><label><input type="checkbox" data-k="c14"><span>Abrir su <code>TestN.java</code></span></label></li>
+<li class="task"><label><input type="checkbox" data-k="c15"><span>Mirar los <strong>imports</strong> del test (qué anotaciones espera)</span></label></li>
+<li class="task"><label><input type="checkbox" data-k="c16"><span>Mirar el <code>setup()</code> y los <code>when(...)</code>: qué datos hay y qué es <code>null</code></span></label></li>
+<li class="task"><label><input type="checkbox" data-k="c17"><span>Ver qué códigos o valores espera cada <code>@Test</code></span></label></li>
+<li class="task"><label><input type="checkbox" data-k="c18"><span>Resolver y lanzar <strong>solo ese test</strong></span></label></li>
+<li class="task"><label><input type="checkbox" data-k="c19"><span>Si falla: bloque <code>Results:</code> → línea → abrir el test</span></label></li>
+<li class="task"><label><input type="checkbox" data-k="c20"><span>Si fallan todos: buscar la última <code>Caused by:</code></span></label></li>
+</ul></div>
+<p><strong>Siempre:</strong> bajar al final → bloque <code>Results:</code> → test, línea y mensaje → abrir <code>TestN.java</code> en esa línea.</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Síntoma</th>
+<th>Qué pasa</th>
+<th>Qué hago</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>cannot find symbol: class X</code></td>
+<td>Falta import o errata en el nombre</td>
+<td>Ctrl+. sobre X / copiar import de otro fichero</td>
+</tr>
+<tr>
+<td><code>cannot find symbol: variable x</code></td>
+<td>Nombre de variable mal escrito / falta <code>()</code> en un método</td>
+<td>Comparar letra a letra</td>
+</tr>
+<tr>
+<td><code>package x.y does not exist</code></td>
+<td>Ruta del import mal (<code>java.utils</code>)</td>
+<td>Revisar el paquete</td>
+</tr>
+<tr>
+<td><code>class, interface, enum, or record expected</code> en las primeras líneas</td>
+<td>Estructura rota: imports encima del <code>package</code>, algo suelto</td>
+<td>Orden: <code>package</code> → <code>import</code> → clase</td>
+</tr>
+<tr>
+<td><code>incompatible types ... equality constraints: A ... lower bounds: B</code></td>
+<td>Declaras que devuelves A pero devuelves B</td>
+<td>Cambiar el tipo de la firma (<code>ResponseEntity&lt;B&gt;</code>)</td>
+</tr>
+<tr>
+<td><code>is ambiguous</code></td>
+<td>Dos <code>import ...*</code> con una clase del mismo nombre</td>
+<td>Import concreto de la que quiero</td>
+</tr>
+<tr>
+<td><strong>Todos</strong> los tests dan Error + <code>Failed to load ApplicationContext</code></td>
+<td><strong>Spring no arranca</strong></td>
+<td>Buscar la <strong>última</strong> línea <code>Caused by:</code></td>
+</tr>
+<tr>
+<td><code>Unable to locate persister</code></td>
+<td>Falta <code>@Entity</code></td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>repository was not injected ... null</code></td>
+<td>Repo no extiende <code>CrudRepository</code></td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>expected: &lt;true&gt; but was: &lt;false&gt;</code></td>
+<td>Mensaje inútil</td>
+<td>Abrir el test en esa línea</td>
+</tr>
+<tr>
+<td><code>Id X was not found ... getY</code></td>
+<td>Falta una fila/relación en <code>data.sql</code></td>
+<td>Revisar ese id</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong><code>Caused by</code> típicos cuando Spring no arranca (casi siempre <code>data.sql</code>):</strong></p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Mensaje</th>
+<th>Causa</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Column "XXX" not found</code></td>
+<td>Nombre de columna mal → mirar <code>create table</code></td>
+</tr>
+<tr>
+<td><code>Table "XXX" not found</code></td>
+<td>Nombre de tabla mal</td>
+</tr>
+<tr>
+<td><code>Syntax error ... [*]</code></td>
+<td>Coma, comilla o paréntesis; <code>[*]</code> marca dónde</td>
+</tr>
+<tr>
+<td><code>Referential integrity constraint violation</code></td>
+<td>Apunto a un id que no existe o INSERT en mal orden</td>
+</tr>
+<tr>
+<td><code>Data conversion error ... "SENT"</code></td>
+<td>Falta <code>@Enumerated(EnumType.STRING)</code></td>
+</tr>
+<tr>
+<td><code>NULL not allowed for column</code></td>
+<td>Falta un valor obligatorio</td>
+</tr>
+</tbody>
+</table></div>
+<p class="callout mine"><span class="ico" aria-hidden="true">✎</span><span class="txt"><strong>Mis errores típicos:</strong></span></p>
+<ul>
+<li>…</li>
+<li>…</li>
+<li>…</li>
+</ul>
+<h3 id="leer-mockito-en-los-tests">Leer Mockito en los tests</h3>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>En el test</th>
+<th>Significa</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>@Mock XRepository repo;</code></td>
+<td>Repositorio falso: no usa la BD</td>
+</tr>
+<tr>
+<td><code>@MockitoBean XRepository repo;</code></td>
+<td>Igual, pero dentro del contexto de Spring (tests de controlador)</td>
+</tr>
+<tr>
+<td><code>when(repo.findById(1)).thenReturn(Optional.of(x));</code></td>
+<td>«Si te llaman con 1, devuelve x» → <strong>estos son los datos que tendré</strong></td>
+</tr>
+<tr>
+<td><code>when(repo.findById(9)).thenReturn(Optional.empty());</code></td>
+<td>Caso «no existe» → espera <strong>404</strong></td>
+</tr>
+<tr>
+<td><code>when(repo.save(any(X.class))).thenReturn(x);</code></td>
+<td>Cualquier <code>save</code> devuelve x</td>
+</tr>
+<tr>
+<td><code>verify(repo).save(x);</code></td>
+<td>El test exige que <strong>llame</strong> a <code>save</code></td>
+</tr>
+<tr>
+<td><code>verify(repo, never()).save(x);</code></td>
+<td>El test exige que <strong>NO</strong> llame a <code>save</code> (lanzar antes)</td>
+</tr>
+<tr>
+<td><code>verify(repo, times(2)).findAll();</code></td>
+<td>Exactamente 2 llamadas</td>
+</tr>
+<tr>
+<td><code>@WithMockUser(username = "player1", authorities = {"PLAYER"})</code></td>
+<td>Petición hecha por ese usuario con ese rol</td>
+</tr>
+<tr>
+<td><code>.andExpect(status().isNotFound())</code></td>
+<td>Espera 404 (<code>isOk</code> 200, <code>isForbidden</code> 403, <code>isCreated</code> 201, <code>isBadRequest</code> 400)</td>
+</tr>
+<tr>
+<td><code>.andExpect(jsonPath("$[0].points").value(3))</code></td>
+<td>En el JSON, el primer elemento tiene <code>points = 3</code></td>
+</tr>
+</tbody>
+</table></div>
+<p class="callout warn"><span class="ico" aria-hidden="true">!</span><span class="txt">Lo que <strong>no</strong> sale en un <code>when(...)</code> o en el <code>setup()</code>, en el test vale <code>null</code> o está vacío.</span></p>
+</section>
+<section class="sec cat-java"><h2 id="2-entidades"><span class="chip">Java</span>2. ENTIDADES</h2>
+<div class="checklist"><h3 class="cl-h" id="checklist_2">Checklist <span class="prog"></span></h3><ul>
+<li class="task"><label><input type="checkbox" data-k="c21"><span><code>@Entity</code> en la clase</span></label></li>
+<li class="task"><label><input type="checkbox" data-k="c22"><span><code>extends BaseEntity</code> (id Integer) y <strong>borrar</strong> el <code>Integer id;</code> si la clase trae uno</span></label></li>
+<li class="task"><label><input type="checkbox" data-k="c23"><span>Cada atributo con sus validaciones (<code>@NotNull</code>, <code>@NotBlank</code>, <code>@Size</code>, <code>@Min</code>...)</span></label></li>
+<li class="task"><label><input type="checkbox" data-k="c24"><span>Enums con <code>@Enumerated(EnumType.STRING)</code></span></label></li>
+<li class="task"><label><input type="checkbox" data-k="c25"><span>Atributo derivado (<code>/x</code>) → método con <code>@Transient</code></span></label></li>
+<li class="task"><label><input type="checkbox" data-k="c26"><span><strong>No</strong> quitar todavía los <code>@Transient</code> de las relaciones</span></label></li>
+<li class="task"><label><input type="checkbox" data-k="c27"><span>Repositorio <code>extends CrudRepository&lt;X, Integer&gt;</code></span></label></li>
+<li class="task"><label><input type="checkbox" data-k="c28"><span>Imports: <code>jakarta.persistence.*</code> y <code>jakarta.validation.constraints.*</code></span></label></li>
+<li class="task"><label><input type="checkbox" data-k="c29"><span>Lanzar el test</span></label></li>
+</ul></div>
+<div class="code" data-lang="java"><div class="code-h"><span>Java</span><button class="copy" type="button">Copiar</button></div><pre><code class="language-java">import jakarta.persistence.*;
+import jakarta.validation.constraints.*;
+import es.us.dp1.chess.tournament.model.BaseEntity;
+
+@Entity
+@Getter @Setter
+public class X extends BaseEntity {     // BaseEntity ya da el id Integer
+    ...
+}
+</code></pre></div>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Enunciado dice…</th>
+<th>Anotación</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>entidad / tabla</td>
+<td><code>@Entity</code> en la clase</td>
+</tr>
+<tr>
+<td><code>id</code> Integer clave primaria</td>
+<td><code>extends BaseEntity</code></td>
+</tr>
+<tr>
+<td>obligatorio / no nulo</td>
+<td><code>@NotNull</code></td>
+</tr>
+<tr>
+<td>no vacío / no solo espacios (String)</td>
+<td><code>@NotBlank</code></td>
+</tr>
+<tr>
+<td>longitud entre 3 y 50</td>
+<td><code>@Size(min = 3, max = 50)</code></td>
+</tr>
+<tr>
+<td>como máximo 1000 caracteres</td>
+<td><code>@Size(max = 1000)</code></td>
+</tr>
+<tr>
+<td>valor ≥ 1 / entre 1 y 8</td>
+<td><code>@Min(1)</code> / <code>@Min(1) @Max(8)</code></td>
+</tr>
+<tr>
+<td>≥ 0</td>
+<td><code>@Min(0)</code> o <code>@PositiveOrZero</code></td>
+</tr>
+<tr>
+<td>&gt; 0</td>
+<td><code>@Positive</code></td>
+</tr>
+<tr>
+<td>email válido</td>
+<td><code>@Email</code></td>
+</tr>
+<tr>
+<td>fecha pasada / futura</td>
+<td><code>@Past</code> / <code>@Future</code></td>
+</tr>
+<tr>
+<td>enum guardado como texto</td>
+<td><code>@Enumerated(EnumType.STRING)</code></td>
+</tr>
+<tr>
+<td>opcional</td>
+<td>nada</td>
+</tr>
+<tr>
+<td>atributo derivado <code>/x</code>, «volátil», «no persistir»</td>
+<td><code>@Transient</code> (también sobre un <strong>método</strong>)</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Atributo derivado (método) — ejemplo winRate:</strong></p>
+<div class="code" data-lang="java"><div class="code-h"><span>Java</span><button class="copy" type="button">Copiar</button></div><pre><code class="language-java">@Transient
+public Double getWinRate() {
+    int total = wins + losses;
+    return total == 0 ? 0.0 : (double) wins / total;   // ojo división entre 0
+}
+</code></pre></div>
+<p><strong>Repositorio:</strong></p>
+<div class="code" data-lang="java"><div class="code-h"><span>Java</span><button class="copy" type="button">Copiar</button></div><pre><code class="language-java">import org.springframework.data.repository.CrudRepository;
+
+public interface XRepository extends CrudRepository&lt;X, Integer&gt; { }
+</code></pre></div>
+<p class="callout warn"><span class="ico" aria-hidden="true">!</span><span class="txt">No quitar los <code>@Transient</code> de las relaciones hasta el ejercicio de relaciones.</span></p>
+<h3 id="la-clase-ya-trae-su-propio-integer-id-g3">La clase ya trae su propio <code>Integer id;</code> (G3)</h3>
+<p>Borrar esa línea y poner <code>extends BaseEntity</code>. Si se dejan los dos, hay <strong>dos <code>id</code></strong> y Spring no arranca.
+No usar <code>@Id @GeneratedValue</code> propio: la secuencia de <code>BaseEntity</code> empieza en 100 para no chocar con los ids del <code>data.sql</code>.</p>
+<h3 id="cuando-notnull">¿Cuándo <code>@NotNull</code>?</h3>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Caso</th>
+<th>¿<code>@NotNull</code>?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>El enunciado dice «obligatorio / no nulo / required»</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>«Opcional» o no dice nada</td>
+<td>❌</td>
+</tr>
+<tr>
+<td>Relación con destino <code>1</code>, <code>1..n</code>, <code>2..n</code> (mínimo ≥ 1)</td>
+<td>✅ (+ <code>@Size(min = N)</code> si es lista)</td>
+</tr>
+<tr>
+<td>Relación con destino <code>0..1</code>, <code>0..n</code></td>
+<td>❌</td>
+</tr>
+<tr>
+<td>El <code>id</code></td>
+<td>❌ nunca</td>
+</tr>
+</tbody>
+</table></div>
+<ul>
+<li><code>@Size</code> <strong>no</strong> impide el <code>null</code> → obligatorio con tamaño = <code>@NotNull @Size(...)</code>.</li>
+<li><code>@NotBlank</code> ya incluye el <code>@NotNull</code>.</li>
+<li>En una lista: <code>@NotNull</code> rechaza <code>null</code>, <code>@Size(min = 1)</code> rechaza <code>[]</code> → hacen falta las dos (o <code>@NotEmpty</code> para mínimo 1).</li>
+<li>Tipos primitivos (<code>int</code>, <code>boolean</code>) nunca son <code>null</code>: <code>@NotNull</code> no hace nada.</li>
+</ul>
+</section>
+<section class="sec cat-java"><h2 id="3-uml-y-relaciones"><span class="chip">Java</span>3. UML Y RELACIONES</h2>
+<div class="checklist"><h3 class="cl-h" id="checklist_3">Checklist <span class="prog"></span></h3><ul>
+<li class="task"><label><input type="checkbox" data-k="c30"><span>Quitar los <code>@Transient</code> de las relaciones</span></label></li>
+<li class="task"><label><input type="checkbox" data-k="c31"><span>Para cada flecha: mirar la cardinalidad del <strong>destino</strong></span></label></li>
+<li class="task"><label><input type="checkbox" data-k="c32"><span>Anotación correcta (<code>@ManyToOne</code>, <code>@ManyToMany</code>, <code>@OneToMany</code>)</span></label></li>
+<li class="task"><label><input type="checkbox" data-k="c33"><span><code>@NotNull</code> si el destino es 1 o 1..n / 2..n</span></label></li>
+<li class="task"><label><input type="checkbox" data-k="c34"><span><code>@Size(min = N)</code> si el destino es N..n</span></label></li>
+<li class="task"><label><input type="checkbox" data-k="c35"><span><code>@JoinTable</code> con nombres elegidos en los <code>@ManyToMany</code></span></label></li>
+<li class="task"><label><input type="checkbox" data-k="c36"><span>Lanzar el test <strong>y</strong> el de entidades</span></label></li>
+</ul></div>
+<h3 id="leer-el-uml">Leer el UML</h3>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>En el diagrama</th>
+<th>Significa</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Clase en <strong>rojo</strong></td>
+<td>La tengo que mapear yo (entidad)</td>
+</tr>
+<tr>
+<td>Clase en <strong>azul</strong></td>
+<td>Ya mapeada, pero la uso</td>
+</tr>
+<tr>
+<td><code>&lt;&lt;enumeration&gt;&gt;</code></td>
+<td>Enum → <code>@Enumerated(EnumType.STRING)</code> en el atributo que la usa</td>
+</tr>
+<tr>
+<td><code>/atributo</code></td>
+<td>Derivado → método con <code>@Transient</code></td>
+</tr>
+<tr>
+<td>Flecha <code>A --&gt; B : nombre</code></td>
+<td>Atributo <code>nombre</code> en A, de tipo B (unidireccional)</td>
+</tr>
+<tr>
+<td>Número junto a B</td>
+<td>Cuántos B tiene cada A → decide <code>@ManyToOne</code> / <code>@ManyToMany</code> / <code>@OneToMany</code> y <code>@NotNull</code> / <code>@Size</code></td>
+</tr>
+<tr>
+<td>Rombo relleno ◆ (<code>*--&gt;</code>)</td>
+<td>Composición → <code>cascade = CascadeType.ALL</code></td>
+</tr>
+<tr>
+<td><code>&lt;\|--</code> (triángulo)</td>
+<td>Herencia → <code>extends</code> (p. ej. <code>BaseEntity</code>)</td>
+</tr>
+<tr>
+<td><code>+tipo nombre</code></td>
+<td>Atributo con su tipo Java exacto</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="relaciones">Relaciones</h3>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Número</th>
+<th>Qué decide</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Destino</strong> (punta de la flecha)</td>
+<td>Objeto o lista, y si lleva <code>@NotNull</code> / <code>@Size</code></td>
+</tr>
+<tr>
+<td><strong>Origen</strong></td>
+<td><code>@ManyToOne</code> / <code>@OneToOne</code>, o <code>@ManyToMany</code> / <code>@OneToMany</code></td>
+</tr>
+</tbody>
+</table></div>
+<p><code>@OneToMany</code> = cada elemento es <strong>solo de uno</strong> (origen <code>1</code> o <code>0..1</code>). <code>@ManyToMany</code> = se <strong>comparten</strong> (origen <code>0..n</code>).</p>
+<p>Mirar la cardinalidad del <strong>destino</strong> (donde apunta la flecha). Solo anoto el lado del que sale la flecha.</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Origen → destino</th>
+<th>Anotación</th>
+<th>Tipo</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>0..n → 1</code></td>
+<td><code>@ManyToOne</code> + <code>@NotNull</code></td>
+<td><code>User</code></td>
+</tr>
+<tr>
+<td><code>0..n → 0..1</code></td>
+<td><code>@ManyToOne</code></td>
+<td><code>User</code></td>
+</tr>
+<tr>
+<td><code>0..n → 0..n</code></td>
+<td><code>@ManyToMany</code></td>
+<td><code>List&lt;User&gt;</code></td>
+</tr>
+<tr>
+<td><code>0..n → 1..n</code></td>
+<td><code>@ManyToMany</code> + <code>@NotNull</code> + <code>@Size(min = 1)</code></td>
+<td><code>List&lt;User&gt;</code></td>
+</tr>
+<tr>
+<td><code>0..n → 2..n</code></td>
+<td><code>@ManyToMany</code> + <code>@NotNull</code> + <code>@Size(min = 2)</code></td>
+<td><code>List&lt;User&gt;</code></td>
+</tr>
+<tr>
+<td><code>1 → 0..n</code></td>
+<td><code>@OneToMany</code></td>
+<td><code>List&lt;Rating&gt;</code></td>
+</tr>
+<tr>
+<td><code>1 → 1</code> composición ◆</td>
+<td><code>@OneToOne(cascade = CascadeType.ALL)</code></td>
+<td><code>ChessBoard</code></td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>ManyToMany con nombres elegidos por mí (recomendado):</strong></p>
+<div class="code" data-lang="java"><div class="code-h"><span>Java</span><button class="copy" type="button">Copiar</button></div><pre><code class="language-java">@NotNull
+@Size(min = 2)
+@ManyToMany
+@JoinTable(name = &quot;announcement_recipients&quot;,
+    joinColumns = @JoinColumn(name = &quot;announcement_id&quot;),      // esta entidad
+    inverseJoinColumns = @JoinColumn(name = &quot;user_id&quot;))      // la otra
+List&lt;User&gt; recipients;
+</code></pre></div>
+<p>Ejemplo ya hecho en el proyecto: <code>FriendlyChallenge.participants</code>.</p>
+<p><strong>Nombres por defecto si NO pongo <code>@JoinTable</code></strong> (también para <code>@OneToMany</code> unidireccional):
+tabla <code>tablaOrigen_atributo</code>, columnas <code>tablaOrigen_id</code> y <code>atributo_id</code>. <strong>Comprobar siempre en el <code>create table</code>.</strong></p>
+</section>
+<section class="sec cat-sql"><h2 id="4-datasql-srcmainresourcesdatasql"><span class="chip">SQL</span>4. data.sql (<code>src/main/resources/data.sql</code>)</h2>
+<div class="checklist"><h3 class="cl-h" id="checklist_4">Checklist <span class="prog"></span></h3><ul>
+<li class="task"><label><input type="checkbox" data-k="c37"><span>Lanzar un test y copiar los nombres del <code>create table</code></span></label></li>
+<li class="task"><label><input type="checkbox" data-k="c38"><span>INSERTs al <strong>final</strong> de <code>data.sql</code></span></label></li>
+<li class="task"><label><input type="checkbox" data-k="c39"><span>Orden: lo apuntado antes que lo que apunta; tabla intermedia al final</span></label></li>
+<li class="task"><label><input type="checkbox" data-k="c40"><span>Textos <strong>copiados</strong> del enunciado</span></label></li>
+<li class="task"><label><input type="checkbox" data-k="c41"><span>Enum <code>'TEXTO'</code>, fecha <code>'2026-07-01 10:00:00'</code>, <code>NULL</code>, <code>''</code> para el apóstrofo</span></label></li>
+<li class="task"><label><input type="checkbox" data-k="c42"><span>Revisar comas entre filas y <code>;</code> al final</span></label></li>
+<li class="task"><label><input type="checkbox" data-k="c43"><span>Lanzar el test; si fallan todos → <code>Caused by</code></span></label></li>
+</ul></div>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Regla</th>
+<th>Ejemplo</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Tabla = clase en snake_case</td>
+<td><code>ChallengeAnnouncement</code> → <code>challenge_announcement</code></td>
+</tr>
+<tr>
+<td>Columna = atributo en snake_case</td>
+<td><code>sentAt</code> → <code>sent_at</code></td>
+</tr>
+<tr>
+<td>FK de <code>@ManyToOne</code> = atributo + <code>_id</code></td>
+<td><code>challenge</code> → <code>challenge_id</code></td>
+</tr>
+<tr>
+<td><code>@ManyToMany</code> / <code>@OneToMany</code></td>
+<td>Tabla intermedia aparte (no columna)</td>
+</tr>
+<tr>
+<td>Enum</td>
+<td><code>'SENT'</code></td>
+</tr>
+<tr>
+<td>LocalDateTime</td>
+<td><code>'2026-07-01 10:00:00'</code> (espacio, no <code>T</code>)</td>
+</tr>
+<tr>
+<td>LocalDate</td>
+<td><code>'2024-09-01'</code></td>
+</tr>
+<tr>
+<td>Boolean</td>
+<td><code>TRUE</code> / <code>FALSE</code></td>
+</tr>
+<tr>
+<td>Nulo</td>
+<td><code>NULL</code> sin comillas</td>
+</tr>
+<tr>
+<td>Apóstrofo</td>
+<td><code>'I can''t'</code></td>
+</tr>
+<tr>
+<td><strong>Orden</strong></td>
+<td>Primero lo apuntado, luego lo que apunta; tabla intermedia al final</td>
+</tr>
+</tbody>
+</table></div>
+<div class="code" data-lang="sql"><div class="code-h"><span>SQL</span><button class="copy" type="button">Copiar</button></div><pre><code class="language-sql">INSERT INTO tabla (id, col1, col2, fk_id) VALUES
+    (1, 'texto', 'ENUM', 1),
+    (2, 'texto', 'ENUM', 2);
+
+INSERT INTO tabla_intermedia (a_id, b_id) VALUES
+    (1, 4), (1, 5);
+</code></pre></div>
+<p class="callout warn"><span class="ico" aria-hidden="true">!</span><span class="txt"><strong>Copiar</strong> nombres del <code>create table</code> / de la entidad. <strong>Copiar</strong> los textos exactos del enunciado.</span></p>
+<p class="callout warn"><span class="ico" aria-hidden="true">!</span><span class="txt">El enunciado da las fechas como <code>01-09-2024</code> → en SQL van <strong>al revés</strong>: <code>'2024-09-01'</code>.</span></p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Relación</th>
+<th>Dónde va en el SQL</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>@ManyToOne</code></td>
+<td>Columna <code>atributo_id</code> <strong>dentro del INSERT de la propia tabla</strong> (nunca tabla aparte)</td>
+</tr>
+<tr>
+<td><code>@ManyToMany</code></td>
+<td>INSERT <strong>aparte</strong> en la tabla intermedia</td>
+</tr>
+<tr>
+<td><code>@OneToMany</code> unidireccional</td>
+<td><strong>También</strong> tabla intermedia (<code>season_ratings (season_id, ratings_id)</code>)</td>
+</tr>
+</tbody>
+</table></div>
+<p>Sin <code>@JoinTable</code>, la 2ª columna lleva el <strong>nombre del atributo</strong>: <code>ratings_id</code>, no <code>rating_id</code>.</p>
+</section>
+<section class="sec cat-java"><h2 id="5-repositorio-consultas"><span class="chip">Java</span>5. REPOSITORIO: CONSULTAS</h2>
+<div class="checklist"><h3 class="cl-h" id="checklist_5">Checklist <span class="prog"></span></h3><ul>
+<li class="task"><label><input type="checkbox" data-k="c44"><span>Repositorio <code>extends CrudRepository&lt;X, Integer&gt;</code></span></label></li>
+<li class="task"><label><input type="checkbox" data-k="c45"><span>¿El método ya viene con nombre? → <code>@Query</code> o nombre derivado</span></label></li>
+<li class="task"><label><input type="checkbox" data-k="c46"><span>Parámetros con <code>@Param("x")</code> + <code>:x</code>, o <code>?1</code></span></label></li>
+<li class="task"><label><input type="checkbox" data-k="c47"><span>Espacio al final de cada trozo del String</span></label></li>
+<li class="task"><label><input type="checkbox" data-k="c48"><span>JPQL con <strong>clases y atributos</strong>, no tablas</span></label></li>
+<li class="task"><label><input type="checkbox" data-k="c49"><span><code>ORDER BY</code> si piden orden</span></label></li>
+<li class="task"><label><input type="checkbox" data-k="c50"><span>Lanzar el test</span></label></li>
+</ul></div>
+<div class="code" data-lang="java"><div class="code-h"><span>Java</span><button class="copy" type="button">Copiar</button></div><pre><code class="language-java">import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+</code></pre></div>
+<p><strong>Filtro simple con parámetros:</strong></p>
+<div class="code" data-lang="java"><div class="code-h"><span>Java</span><button class="copy" type="button">Copiar</button></div><pre><code class="language-java">@Query(&quot;SELECT p FROM Piece p WHERE p.color = :color AND p.type.name = :typeName&quot;)
+List&lt;Piece&gt; findByColorAndType(@Param(&quot;color&quot;) PieceColor color, @Param(&quot;typeName&quot;) String typeName);
+</code></pre></div>
+<p><strong>Ordenar:</strong></p>
+<div class="code" data-lang="java"><div class="code-h"><span>Java</span><button class="copy" type="button">Copiar</button></div><pre><code class="language-java">@Query(&quot;SELECT r FROM Season s JOIN s.ratings r WHERE s.id = :id ORDER BY r.elo DESC&quot;)
+List&lt;Rating&gt; findStandings(@Param(&quot;id&quot;) Integer id);
+</code></pre></div>
+<p><strong>Agregado (SUM/COUNT + GROUP BY):</strong></p>
+<div class="code" data-lang="java"><div class="code-h"><span>Java</span><button class="copy" type="button">Copiar</button></div><pre><code class="language-java">@Query(&quot;SELECT u, SUM(CASE WHEN m.winner = u THEN 2 WHEN m.winner IS NULL THEN 1 ELSE 0 END) &quot;
+     + &quot;FROM FriendlyChallenge fc JOIN fc.matches m JOIN fc.participants u &quot;
+     + &quot;WHERE fc.id = :challengeId AND m.finish IS NOT NULL AND (m.white = u OR m.black = u) &quot;
+     + &quot;GROUP BY u ORDER BY 2 DESC&quot;)
+List&lt;Object[]&gt; findParticipantPoints(@Param(&quot;challengeId&quot;) Integer challengeId);
+</code></pre></div>
+<p>Receta JPQL: <strong>SELECT</strong> (lo que va en cada fila) → <strong>FROM/JOIN</strong> por atributos Java → <strong>WHERE</strong> (id + filtros + «participa») → <strong>GROUP BY</strong> → <strong>ORDER BY</strong>.
+- WHERE decide <strong>qué filas entran</strong>; CASE decide <strong>cuánto vale</strong> cada una.
+- Espacio al final de cada trozo de String.
+- Es JPQL: nombres de <strong>clases y atributos</strong>, no de tablas.</p>
+<h3 id="consultas-por-nombre-del-metodo-sin-query">Consultas por nombre del método (sin <code>@Query</code>)</h3>
+<p>Spring genera la consulta a partir del nombre. Los nombres usan los <strong>atributos de la entidad</strong>.</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Nombre del método</th>
+<th>Equivale a</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>findByName(String name)</code></td>
+<td><code>WHERE name = ?</code></td>
+</tr>
+<tr>
+<td><code>findByColorAndType(PieceColor c, PieceType t)</code></td>
+<td><code>WHERE color = ? AND type = ?</code></td>
+</tr>
+<tr>
+<td><code>findByType_Name(String name)</code></td>
+<td><code>WHERE type.name = ?</code> (atributo de otra entidad)</td>
+</tr>
+<tr>
+<td><code>findByDifficultyGreaterThanEqual(Integer d)</code></td>
+<td><code>WHERE difficulty &gt;= ?</code></td>
+</tr>
+<tr>
+<td><code>findByDifficultyLessThan(Integer d)</code></td>
+<td><code>WHERE difficulty &lt; ?</code></td>
+</tr>
+<tr>
+<td><code>findByStartBetween(LocalDateTime a, LocalDateTime b)</code></td>
+<td><code>WHERE start BETWEEN ? AND ?</code></td>
+</tr>
+<tr>
+<td><code>findByFinishIsNull()</code></td>
+<td><code>WHERE finish IS NULL</code></td>
+</tr>
+<tr>
+<td><code>findByNameContaining(String s)</code></td>
+<td><code>WHERE name LIKE %s%</code></td>
+</tr>
+<tr>
+<td><code>findByPlayerOrderByEloDesc(User u)</code></td>
+<td><code>WHERE player = ? ORDER BY elo DESC</code></td>
+</tr>
+<tr>
+<td><code>countByWinner(User u)</code></td>
+<td><code>SELECT COUNT(*) WHERE winner = ?</code></td>
+</tr>
+<tr>
+<td><code>existsByName(String n)</code></td>
+<td><code>boolean</code></td>
+</tr>
+</tbody>
+</table></div>
+<ul>
+<li>Si el nombre de método <strong>ya viene dado</strong> en el enunciado y no encaja con este formato → usar <code>@Query</code>.</li>
+<li>Tamaño de una colección en JPQL: <code>SIZE(x.lista)</code> (p. ej. <code>WHERE SIZE(b.pieces) &lt; :n</code>).</li>
+</ul>
+<h3 id="parametros-por-posicion-1-2-y-size">Parámetros por posición (<code>?1</code>, <code>?2</code>) y <code>SIZE()</code></h3>
+<p>(G2 lo trae hecho)</p>
+<div class="code" data-lang="java"><div class="code-h"><span>Java</span><button class="copy" type="button">Copiar</button></div><pre><code class="language-java">@Query(&quot;SELECT p FROM ChessProblem p WHERE p.difficultyLevel &gt;= ?1 AND SIZE(p.board.pieces) &lt; ?2&quot;)
+List&lt;ChessProblem&gt; findByDifficultyAndNumPieces(Integer difficultyLevel, Integer numPieces);
+</code></pre></div>
+<p><code>?1</code> = primer parámetro, <code>?2</code> = segundo. No necesita <code>@Param</code>.</p>
+</section>
+<section class="sec cat-java"><h2 id="6-servicio"><span class="chip">Java</span>6. SERVICIO</h2>
+<div class="checklist"><h3 class="cl-h" id="checklist_6">Checklist <span class="prog"></span></h3><ul>
+<li class="task"><label><input type="checkbox" data-k="c51"><span><code>@Service</code> en la clase</span></label></li>
+<li class="task"><label><input type="checkbox" data-k="c52"><span><code>@Autowired</code> en el constructor (si no viene con <code>Optional</code>, no tocar)</span></label></li>
+<li class="task"><label><input type="checkbox" data-k="c53"><span><code>@Transactional</code> en <strong>cada</strong> método, no en la clase</span></label></li>
+<li class="task"><label><input type="checkbox" data-k="c54"><span>Lectura → <code>readOnly = true</code></span></label></li>
+<li class="task"><label><input type="checkbox" data-k="c55"><span>Excepción checked → <code>rollbackFor = X.class</code> <strong>y</strong> <code>throws X</code> en la firma</span></label></li>
+<li class="task"><label><input type="checkbox" data-k="c56"><span>Reglas comprobadas <strong>antes</strong> de <code>repo.save</code></span></label></li>
+<li class="task"><label><input type="checkbox" data-k="c57"><span>Condición: escribir la válida y negarla</span></label></li>
+<li class="task"><label><input type="checkbox" data-k="c58"><span>Comparar ids con <code>.equals()</code></span></label></li>
+<li class="task"><label><input type="checkbox" data-k="c59"><span>Mirar qué rellena el test (lo demás es <code>null</code>)</span></label></li>
+<li class="task"><label><input type="checkbox" data-k="c60"><span>Lanzar el test</span></label></li>
+</ul></div>
+<div class="code" data-lang="java"><div class="code-h"><span>Java</span><button class="copy" type="button">Copiar</button></div><pre><code class="language-java">import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;   // el de SPRING
+
+@Service
+public class XService {
+    XRepository repo;
+
+    @Autowired
+    public XService(XRepository repo) { this.repo = repo; }
+
+    @Transactional(readOnly = true)
+    public List&lt;X&gt; getAll() { return (List&lt;X&gt;) repo.findAll(); }
+
+    @Transactional(readOnly = true)
+    public X getById(Integer id) {
+        return repo.findById(id)
+            .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;X&quot;, &quot;id&quot;, id));
+    }
+
+    @Transactional(rollbackFor = MiExcepcion.class)        // si la excepción es checked
+    public X save(X x) throws MiExcepcion {
+        // 1º comprobar reglas → throw
+        // 2º repo.save
+        return repo.save(x);
+    }
+}
+</code></pre></div>
+<ul>
+<li><code>@Transactional</code> <strong>en cada método</strong>, no en la clase.</li>
+<li>Leer → <code>readOnly = true</code>. Escribir → sin <code>readOnly</code>.</li>
+<li>Excepción <code>extends Exception</code> → <strong><code>rollbackFor</code></strong>. <code>extends RuntimeException</code> → no hace falta.</li>
+<li>La regla se comprueba <strong>antes</strong> de <code>repo.save</code> (<code>verify(repo, never()).save(...)</code>).</li>
+</ul>
+<p><strong>Condiciones:</strong> escribir la condición <strong>válida</strong> y negarla:</p>
+<div class="code" data-lang="java"><div class="code-h"><span>Java</span><button class="copy" type="button">Copiar</button></div><pre><code class="language-java">boolean valid = winner == null || winner == white || winner == black;
+if (!valid) throw new MiExcepcion();
+</code></pre></div>
+<p>(De Morgan: <code>!(A || B)</code> = <code>!A &amp;&amp; !B</code>)</p>
+<p><strong>Fechas:</strong> <code>start.isBefore(finish)</code> / <code>isAfter</code>.</p>
+<p><strong>Comparar:</strong>
+- Ids → <code>a.getId().equals(b.getId())</code> (nunca <code>==</code> con Integer).
+- Si el test crea objetos <strong>sin id</strong> → comparar objetos (<code>==</code>).
+- Nunca comparar un id con un objeto entero.</p>
+<p><strong>Bucles anidados (contar):</strong></p>
+<div class="code" data-lang="java"><div class="code-h"><span>Java</span><button class="copy" type="button">Copiar</button></div><pre><code class="language-java">for (User member : community.getMembers()) {
+    int count = 0;
+    for (Season s : community.getSeasons())
+        for (ChessMatch m : s.getMatches())
+            if (member.getId().equals(m.getWhitePlayer().getId())
+             || member.getId().equals(m.getBlackPlayer().getId())) count++;
+    if (count &lt; 2) throw new MiExcepcion();
+}
+</code></pre></div>
+<p class="callout warn"><span class="ico" aria-hidden="true">!</span><span class="txt">Mirar en el <code>setup()</code> del test <strong>qué rellena</strong> en cada objeto (lo que no rellena es <code>null</code>).</span></p>
+<h3 id="reglas-escritas-en-negativo">Reglas escritas en negativo</h3>
+<p>«Los miembros <strong>no son superiores</strong> al máximo» → válido si <code>miembros &lt;= máximo</code> → <strong>error cuando</strong> <code>miembros &gt; máximo</code>.
+Antes de dar por buena la condición, probarla con los datos de un test <strong>válido</strong>: si lanzaría la excepción, está al revés.</p>
+<h3 id="la-firma-no-declara-la-excepcion-anadir-throws">La firma no declara la excepción → añadir <code>throws</code></h3>
+<p>(G2: <code>save</code> sin <code>throws</code>)
+Si la excepción es <em>checked</em> (<code>extends Exception</code>), añadir <code>throws</code> a la firma. Es obligatorio para que compile y los tests ya lo esperan (<code>... throws UnfeasibleAttemptException</code> en el test).</p>
+<div class="code" data-lang="java"><div class="code-h"><span>Java</span><button class="copy" type="button">Copiar</button></div><pre><code class="language-java">@Transactional(rollbackFor = UnfeasibleAttemptException.class)
+public ChessProblemAttempt save(ChessProblemAttempt m) throws UnfeasibleAttemptException {
+</code></pre></div>
+<h3 id="no-puede-haber-otro-activo-salvo-el-mismo-que-se-guarda">«No puede haber otro activo, salvo el mismo que se guarda»</h3>
+<p>(G2)</p>
+<div class="code" data-lang="java"><div class="code-h"><span>Java</span><button class="copy" type="button">Copiar</button></div><pre><code class="language-java">List&lt;ChessProblemAttempt&gt; ongoing = repo.findOngoingAttemptsByUserAndProblem(m.getPlayer(), m.getProblem());
+for (ChessProblemAttempt a : ongoing) {
+    if (!a.getId().equals(m.getId())) {          // otro distinto al que guardo
+        throw new UnfeasibleAttemptException();
+    }
+}
+if (m.getFinish() != null &amp;&amp; !m.getStart().isBefore(m.getFinish())) {
+    throw new UnfeasibleAttemptException();      // inicio debe ser anterior al fin
+}
+return repo.save(m);
+</code></pre></div>
+<p class="callout warn"><span class="ico" aria-hidden="true">!</span><span class="txt"><code>m.getId()</code> puede ser <code>null</code> (objeto nuevo): por eso va <strong>dentro</strong> del <code>equals</code>, no delante.</span></p>
+<h3 id="el-metodo-recibe-la-entidad-entera-usar-su-lista-sin-consulta">El método recibe la entidad entera → usar su lista, sin consulta</h3>
+<p>(G3: <code>getStandings(Season s)</code>)
+No hace falta consulta: los datos ya vienen en el objeto.</p>
+<div class="code" data-lang="java"><div class="code-h"><span>Java</span><button class="copy" type="button">Copiar</button></div><pre><code class="language-java">@Transactional(readOnly = true)
+public List&lt;Rating&gt; getStandings(Season s) {
+    List&lt;Rating&gt; ratings = new ArrayList&lt;&gt;(s.getRatings());
+    ratings.sort(Comparator.comparing(Rating::getElo).reversed());
+    return ratings;
+}
+</code></pre></div>
+<p>(<code>new ArrayList&lt;&gt;(...)</code> porque la lista que viene puede no ser modificable.)</p>
+<h3 id="constructor-con-optionalrepository">Constructor con <code>Optional&lt;Repository&gt;</code></h3>
+<p>(G2, G3)</p>
+<div class="code" data-lang="java"><div class="code-h"><span>Java</span><button class="copy" type="button">Copiar</button></div><pre><code class="language-java">public SeasonService(Optional&lt;SeasonRepository&gt; repository) { ... }
+</code></pre></div>
+<p>No tocarlo. Solo añadir <code>@Service</code> a la clase y <code>@Transactional</code> a los métodos.</p>
+</section>
+<section class="sec cat-java"><h2 id="6b-streams-con-su-equivalente-en-bucle"><span class="chip">Java</span>6b. STREAMS (con su equivalente en bucle)</h2>
+<div class="code" data-lang="java"><div class="code-h"><span>Java</span><button class="copy" type="button">Copiar</button></div><pre><code class="language-java">import java.util.Comparator;
+import java.util.stream.Collectors;   // solo si uso Collectors
+</code></pre></div>
+<p>Esquema: <code>lista.stream()</code> → operaciones intermedias (<code>filter</code>, <code>map</code>, <code>sorted</code>...) → <strong>una</strong> operación final (<code>toList</code>, <code>count</code>, <code>anyMatch</code>...).
+⚠️ Un stream <strong>no modifica</strong> la lista original: hay que hacer <code>return</code> o guardarlo en una variable.</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Quiero…</th>
+<th>Stream</th>
+<th>Devuelve</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Quedarme con los que cumplen algo</td>
+<td><code>.filter(x -&gt; cond)</code></td>
+<td>stream</td>
+</tr>
+<tr>
+<td>Transformar cada elemento</td>
+<td><code>.map(x -&gt; otraCosa)</code></td>
+<td>stream</td>
+</tr>
+<tr>
+<td>Ordenar ascendente</td>
+<td><code>.sorted(Comparator.comparing(X::getCampo))</code></td>
+<td>stream</td>
+</tr>
+<tr>
+<td>Ordenar descendente</td>
+<td><code>.sorted(Comparator.comparing(X::getCampo).reversed())</code></td>
+<td>stream</td>
+</tr>
+<tr>
+<td>Pasar a lista</td>
+<td><code>.toList()</code></td>
+<td><code>List&lt;X&gt;</code> (no modificable)</td>
+</tr>
+<tr>
+<td>¿Alguno cumple?</td>
+<td><code>.anyMatch(x -&gt; cond)</code></td>
+<td><code>boolean</code></td>
+</tr>
+<tr>
+<td>¿Todos cumplen?</td>
+<td><code>.allMatch(x -&gt; cond)</code></td>
+<td><code>boolean</code></td>
+</tr>
+<tr>
+<td>¿Ninguno cumple?</td>
+<td><code>.noneMatch(x -&gt; cond)</code></td>
+<td><code>boolean</code></td>
+</tr>
+<tr>
+<td>Contar</td>
+<td><code>.count()</code></td>
+<td><code>long</code></td>
+</tr>
+<tr>
+<td>Sumar un campo</td>
+<td><code>.mapToInt(X::getCampo).sum()</code></td>
+<td><code>int</code></td>
+</tr>
+<tr>
+<td>Máximo / mínimo</td>
+<td><code>.max(Comparator.comparing(X::getCampo))</code></td>
+<td><code>Optional&lt;X&gt;</code></td>
+</tr>
+<tr>
+<td>El primero que cumpla</td>
+<td><code>.filter(...).findFirst()</code></td>
+<td><code>Optional&lt;X&gt;</code></td>
+</tr>
+<tr>
+<td>Quitar repetidos</td>
+<td><code>.distinct()</code></td>
+<td>stream</td>
+</tr>
+<tr>
+<td>Agrupar por algo</td>
+<td><code>.collect(Collectors.groupingBy(X::getCampo))</code></td>
+<td><code>Map&lt;K, List&lt;X&gt;&gt;</code></td>
+</tr>
+<tr>
+<td>Contar por algo</td>
+<td><code>.collect(Collectors.groupingBy(X::getCampo, Collectors.counting()))</code></td>
+<td><code>Map&lt;K, Long&gt;</code></td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>¿Es participante? (anyMatch)</strong></p>
+<div class="code" data-lang="java"><div class="code-h"><span>Java</span><button class="copy" type="button">Copiar</button></div><pre><code class="language-java">// stream
+boolean isParticipant = challenge.getParticipants().stream()
+    .anyMatch(p -&gt; p.getId().equals(current.getId()));
+
+// bucle
+boolean isParticipant = false;
+for (User p : challenge.getParticipants()) {
+    if (p.getId().equals(current.getId())) { isParticipant = true; break; }
+}
+</code></pre></div>
+<p><strong>Transformar + ordenar (map + sorted + toList)</strong></p>
+<div class="code" data-lang="java"><div class="code-h"><span>Java</span><button class="copy" type="button">Copiar</button></div><pre><code class="language-java">// stream
+return rows.stream()
+    .map(r -&gt; new RankingEntry((User) r[0], ((Number) r[1]).longValue()))
+    .sorted(Comparator.comparing(RankingEntry::getPoints).reversed())
+    .toList();
+
+// bucle
+List&lt;RankingEntry&gt; ranking = new ArrayList&lt;&gt;();
+for (Object[] r : rows) ranking.add(new RankingEntry((User) r[0], ((Number) r[1]).longValue()));
+ranking.sort(Comparator.comparing(RankingEntry::getPoints).reversed());
+return ranking;
+</code></pre></div>
+<p><strong>Filtrar (filter)</strong></p>
+<div class="code" data-lang="java"><div class="code-h"><span>Java</span><button class="copy" type="button">Copiar</button></div><pre><code class="language-java">// stream
+List&lt;ChessMatch&gt; finished = matches.stream()
+    .filter(m -&gt; m.getFinish() != null)
+    .toList();
+
+// bucle
+List&lt;ChessMatch&gt; finished = new ArrayList&lt;&gt;();
+for (ChessMatch m : matches) if (m.getFinish() != null) finished.add(m);
+</code></pre></div>
+<p><strong>Contar (filter + count)</strong></p>
+<div class="code" data-lang="java"><div class="code-h"><span>Java</span><button class="copy" type="button">Copiar</button></div><pre><code class="language-java">// stream
+long played = season.getMatches().stream()
+    .filter(m -&gt; m.getWhitePlayer().equals(u) || m.getBlackPlayer().equals(u))
+    .count();
+
+// bucle
+int played = 0;
+for (ChessMatch m : season.getMatches())
+    if (m.getWhitePlayer().equals(u) || m.getBlackPlayer().equals(u)) played++;
+</code></pre></div>
+<p><strong>Aplanar listas anidadas (flatMap): todas las partidas de todas las temporadas</strong></p>
+<div class="code" data-lang="java"><div class="code-h"><span>Java</span><button class="copy" type="button">Copiar</button></div><pre><code class="language-java">List&lt;ChessMatch&gt; all = community.getSeasons().stream()
+    .flatMap(s -&gt; s.getMatches().stream())
+    .toList();
+</code></pre></div>
+<p><strong>Sumar (mapToInt + sum)</strong></p>
+<div class="code" data-lang="java"><div class="code-h"><span>Java</span><button class="copy" type="button">Copiar</button></div><pre><code class="language-java">int totalWins = ratings.stream().mapToInt(Rating::getWins).sum();
+</code></pre></div>
+<p><strong>Lambdas y referencias a métodos:</strong>
+| Forma | Significa |
+|---|---|
+| <code>x -&gt; x.getId()</code> | Función que recibe <code>x</code> y devuelve su id |
+| <code>X::getId</code> | Lo mismo, abreviado (solo si llama a un método sin más) |
+| <code>(a, b) -&gt; b.getPoints().compareTo(a.getPoints())</code> | Comparador descendente a mano |</p>
+<p class="callout warn"><span class="ico" aria-hidden="true">!</span><span class="txt">Errores típicos:
+- Olvidar el <code>return</code> o la variable → el resultado se pierde.
+- Llamar a <code>.stream()</code> sobre algo <code>null</code> → <code>NullPointerException</code> (mirar qué rellena el test).
+- <code>.toList()</code> devuelve una lista <strong>no modificable</strong>: si luego quiero hacer <code>.add()</code>, usar <code>new ArrayList&lt;&gt;(... .toList())</code>.
+- <code>.count()</code> devuelve <code>long</code>, no <code>int</code>.</span></p>
+</section>
+<section class="sec cat-java"><h2 id="7-controlador-codigos-http-seguridad"><span class="chip">Java</span>7. CONTROLADOR + CÓDIGOS HTTP + SEGURIDAD</h2>
+<div class="checklist"><h3 class="cl-h" id="checklist_7">Checklist <span class="prog"></span></h3><ul>
+<li class="task"><label><input type="checkbox" data-k="c61"><span><code>@RestController</code> + <code>@RequestMapping("/api/v1/...")</code> en la clase</span></label></li>
+<li class="task"><label><input type="checkbox" data-k="c62"><span>Constructor con <code>@Autowired</code></span></label></li>
+<li class="task"><label><input type="checkbox" data-k="c63"><span>Cada endpoint con su ruta (<code>@GetMapping("{id}/algo")</code>)</span></label></li>
+<li class="task"><label><input type="checkbox" data-k="c64"><span>Tipo de <code>ResponseEntity&lt;&gt;</code> = lo que devuelve el servicio</span></label></li>
+<li class="task"><label><input type="checkbox" data-k="c65"><span>Lógica en el <strong>servicio</strong>; el controlador solo llama</span></label></li>
+<li class="task"><label><input type="checkbox" data-k="c66"><span>404 → <code>ResourceNotFoundException</code></span></label></li>
+<li class="task"><label><input type="checkbox" data-k="c67"><span>403 por regla → <code>AccessDeniedException</code> <strong>del proyecto</strong></span></label></li>
+<li class="task"><label><input type="checkbox" data-k="c68"><span>403 por rol → línea en <code>SecurityConfiguration</code> antes de <code>.anyRequest()</code></span></label></li>
+<li class="task"><label><input type="checkbox" data-k="c69"><span>Lanzar el test</span></label></li>
+</ul></div>
+<div class="code" data-lang="java"><div class="code-h"><span>Java</span><button class="copy" type="button">Copiar</button></div><pre><code class="language-java">@RestController
+@RequestMapping(&quot;/api/v1/xs&quot;)
+public class XController {
+    private final XService service;
+
+    @Autowired
+    public XController(XService service) { this.service = service; }
+
+    @GetMapping
+    public ResponseEntity&lt;List&lt;X&gt;&gt; findAll() {
+        return new ResponseEntity&lt;&gt;(service.getAll(), HttpStatus.OK);
+    }
+
+    @GetMapping(&quot;{id}&quot;)
+    public ResponseEntity&lt;X&gt; findById(@PathVariable(&quot;id&quot;) Integer id) {
+        return new ResponseEntity&lt;&gt;(service.getById(id), HttpStatus.OK);
+    }
+
+    @GetMapping(&quot;{id}/algo&quot;)
+    public ResponseEntity&lt;List&lt;Y&gt;&gt; algo(@PathVariable(&quot;id&quot;) Integer id) {
+        return new ResponseEntity&lt;&gt;(service.algo(id), HttpStatus.OK);
+    }
+}
+</code></pre></div>
+<p><strong>Al copiar un método cambiar 3 cosas:</strong> ruta, tipo de <code>ResponseEntity&lt;&gt;</code>, método del servicio.</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Código</th>
+<th>Cómo</th>
+<th>Dónde</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>404</td>
+<td><code>throw new ResourceNotFoundException(...)</code></td>
+<td>Servicio</td>
+</tr>
+<tr>
+<td>403 (regla de negocio)</td>
+<td><code>throw new AccessDeniedException(...)</code> <strong>del paquete <code>exceptions</code> del proyecto</strong></td>
+<td>Servicio</td>
+</tr>
+<tr>
+<td>403 (por rol)</td>
+<td><code>SecurityConfiguration</code></td>
+<td>Configuración</td>
+</tr>
+<tr>
+<td>200</td>
+<td>devolver normalmente</td>
+<td>Controlador</td>
+</tr>
+</tbody>
+</table></div>
+<p>Lógica en el <strong>servicio</strong>; el controlador solo llama. Sin <code>try/catch</code>.
+Usuario logado: <code>userService.findCurrentUser()</code> (en el servicio).</p>
+<p><strong>Restringir a PLAYER → 403</strong> en <code>configuration/SecurityConfiguration.java</code>, <strong>antes de <code>.anyRequest()</code></strong>:</p>
+<div class="code" data-lang="java"><div class="code-h"><span>Java</span><button class="copy" type="button">Copiar</button></div><pre><code class="language-java">.requestMatchers(&quot;/api/v1/xs/**&quot;).hasAuthority(PLAYER)
+</code></pre></div>
+<p class="callout warn"><span class="ico" aria-hidden="true">!</span><span class="txt">Cambiar <code>xs</code> por la ruta real. <strong>Siempre ANTES de <code>.anyRequest()</code></strong>: si va después, compila pero <strong>Spring no arranca</strong> (= 0 en todo el control).</span></p>
+<div class="code" data-lang="java"><div class="code-h"><span>Java</span><button class="copy" type="button">Copiar</button></div><pre><code class="language-java">.requestMatchers(&quot;/api/v1/matches/**&quot;).hasAnyAuthority(PLAYER)
+.requestMatchers(&quot;/api/v1/seasons/**&quot;).hasAuthority(PLAYER)
+.anyRequest().authenticated())
+</code></pre></div>
+<p><strong>Object[] → DTO:</strong></p>
+<div class="code" data-lang="java"><div class="code-h"><span>Java</span><button class="copy" type="button">Copiar</button></div><pre><code class="language-java">List&lt;RankingEntry&gt; ranking = new ArrayList&lt;&gt;();
+for (Object[] r : rows) {
+    User user = (User) r[0];
+    Long points = ((Number) r[1]).longValue();
+    ranking.add(new RankingEntry(user, points));
+}
+ranking.sort(Comparator.comparing(RankingEntry::getPoints).reversed());   // mayor a menor
+return ranking;
+</code></pre></div>
+<h3 id="el-servicio-devuelve-null-404-en-el-controlador-g3">El servicio devuelve <code>null</code> → 404 en el controlador (G3)</h3>
+<p>Si el test hace <code>when(service.getById(600)).thenReturn(null)</code> y espera 404, el servicio usa <code>.orElse(null)</code> y el <strong>controlador</strong> comprueba:</p>
+<div class="code" data-lang="java"><div class="code-h"><span>Java</span><button class="copy" type="button">Copiar</button></div><pre><code class="language-java">Season season = seasonService.getById(id);
+if (season == null) {
+    throw new ResourceNotFoundException(&quot;Season&quot;, &quot;id&quot;, id);
+}
+</code></pre></div>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th><code>Optional</code> →</th>
+<th>Si no existe</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>.orElse(null)</code></td>
+<td><code>null</code> (lo comprueba quien llama)</td>
+</tr>
+<tr>
+<td><code>.orElseThrow(() -&gt; new ResourceNotFoundException(...))</code></td>
+<td>404 directamente</td>
+</tr>
+<tr>
+<td><code>.get()</code></td>
+<td>excepción genérica → <strong>no usar</strong></td>
+</tr>
+</tbody>
+</table></div>
+<p class="callout warn"><span class="ico" aria-hidden="true">!</span><span class="txt">Estructura: anotaciones (<code>@RestController</code>, <code>@RequestMapping</code>) <strong>en la clase</strong>; el constructor se <strong>cierra</strong> antes de los métodos (no se puede escribir un método dentro de otro).</span></p>
+<h3 id="el-servicio-devuelve-optional-404-en-el-controlador">El servicio devuelve <code>Optional</code> → 404 en el controlador</h3>
+<p>(G2: <code>getMatchById</code> devuelve <code>Optional</code>)</p>
+<div class="code" data-lang="java"><div class="code-h"><span>Java</span><button class="copy" type="button">Copiar</button></div><pre><code class="language-java">@GetMapping(&quot;{id}&quot;)
+public ResponseEntity&lt;ChessProblemAttempt&gt; findById(@PathVariable(&quot;id&quot;) Integer id) {
+    ChessProblemAttempt a = service.getMatchById(id)
+        .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;Attempt&quot;, &quot;id&quot;, id));
+    return new ResponseEntity&lt;&gt;(a, HttpStatus.OK);
+}
+</code></pre></div>
+<p>Y si el controlador está vacío: añadir <code>@RestController</code> y <code>@RequestMapping("/api/v1/...")</code> a la clase, y <code>@Autowired</code> al constructor.</p>
+<h3 id="post-put-delete">POST / PUT / DELETE</h3>
+<div class="code" data-lang="java"><div class="code-h"><span>Java</span><button class="copy" type="button">Copiar</button></div><pre><code class="language-java">import jakarta.validation.Valid;
+import org.springframework.beans.BeanUtils;
+import es.us.dp1.chess.tournament.auth.payload.response.MessageResponse;
+
+@PostMapping
+public ResponseEntity&lt;X&gt; create(@RequestBody @Valid X x) {
+    return new ResponseEntity&lt;&gt;(service.save(x), HttpStatus.CREATED);           // 201
+}
+
+@PutMapping(&quot;{id}&quot;)
+public ResponseEntity&lt;X&gt; update(@PathVariable(&quot;id&quot;) Integer id, @RequestBody @Valid X x) {
+    X existing = service.getById(id);                    // 404 si no existe
+    BeanUtils.copyProperties(x, existing, &quot;id&quot;);         // copia todo menos el id
+    return new ResponseEntity&lt;&gt;(service.save(existing), HttpStatus.OK);
+}
+
+@DeleteMapping(&quot;{id}&quot;)
+public ResponseEntity&lt;MessageResponse&gt; delete(@PathVariable(&quot;id&quot;) Integer id) {
+    service.getById(id);                                 // 404 si no existe
+    service.delete(id);
+    return new ResponseEntity&lt;&gt;(new MessageResponse(&quot;X deleted!&quot;), HttpStatus.OK);
+}
+</code></pre></div>
+<p>En el servicio:</p>
+<div class="code" data-lang="java"><div class="code-h"><span>Java</span><button class="copy" type="button">Copiar</button></div><pre><code class="language-java">@Transactional
+public void delete(Integer id) { repo.deleteById(id); }
+</code></pre></div>
+<ul>
+<li><code>@RequestBody</code>: el objeto viene en el JSON de la petición.</li>
+<li><code>@Valid</code>: aplica las validaciones de la entidad → si falla, <strong>400</strong>.</li>
+<li>Si <code>service.save</code> lanza una excepción <em>checked</em>, el método del controlador necesita <code>throws MiExcepcion</code>.</li>
+</ul>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Código</th>
+<th>Constante</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>200</td>
+<td><code>HttpStatus.OK</code></td>
+</tr>
+<tr>
+<td>201</td>
+<td><code>HttpStatus.CREATED</code></td>
+</tr>
+<tr>
+<td>204</td>
+<td><code>HttpStatus.NO_CONTENT</code></td>
+</tr>
+<tr>
+<td>400</td>
+<td><code>HttpStatus.BAD_REQUEST</code></td>
+</tr>
+<tr>
+<td>403</td>
+<td><code>HttpStatus.FORBIDDEN</code></td>
+</tr>
+<tr>
+<td>404</td>
+<td><code>HttpStatus.NOT_FOUND</code></td>
+</tr>
+</tbody>
+</table></div>
+</section>
+<section class="sec cat-test"><h2 id="8-tests-junit-escribir-tests"><span class="chip">Tests</span>8. TESTS JUNIT (escribir tests)</h2>
+<div class="checklist"><h3 class="cl-h" id="checklist_8">Checklist <span class="prog"></span></h3><ul>
+<li class="task"><label><input type="checkbox" data-k="c70"><span>Leer el <code>// Bug:</code> de cada implementación mala</span></label></li>
+<li class="task"><label><input type="checkbox" data-k="c71"><span>Borrar el <code>someTest()</code> con <code>fail()</code></span></label></li>
+<li class="task"><label><input type="checkbox" data-k="c72"><span>Un test del caso normal</span></label></li>
+<li class="task"><label><input type="checkbox" data-k="c73"><span>Un test que cace cada bug</span></label></li>
+<li class="task"><label><input type="checkbox" data-k="c74"><span>Excepciones siempre con <code>assertThrows</code></span></label></li>
+<li class="task"><label><input type="checkbox" data-k="c75"><span>Usar siempre el atributo <code>algorithm</code></span></label></li>
+<li class="task"><label><input type="checkbox" data-k="c76"><span><code>throws Exception</code> en los que llaman directamente</span></label></li>
+<li class="task"><label><input type="checkbox" data-k="c77"><span>Lanzar: 4 de 4</span></label></li>
+</ul></div>
+<div class="code" data-lang="java"><div class="code-h"><span>Java</span><button class="copy" type="button">Copiar</button></div><pre><code class="language-java">import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.Test;
+</code></pre></div>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Comprobar…</th>
+<th>Aserción</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Valor igual</td>
+<td><code>assertEquals(esperado, real)</code></td>
+</tr>
+<tr>
+<td><strong>Array</strong> igual</td>
+<td><code>assertArrayEquals(esperado, real)</code></td>
+</tr>
+<tr>
+<td>Lanza excepción</td>
+<td><code>assertThrows(Ex.class, () -&gt; llamada)</code></td>
+</tr>
+<tr>
+<td>Verdadero/falso</td>
+<td><code>assertTrue</code> / <code>assertFalse</code></td>
+</tr>
+<tr>
+<td>Nulo / no nulo</td>
+<td><code>assertNull</code> / <code>assertNotNull</code></td>
+</tr>
+</tbody>
+</table></div>
+<div class="code" data-lang="java"><div class="code-h"><span>Java</span><button class="copy" type="button">Copiar</button></div><pre><code class="language-java">@Test
+public void nombreQueDiceQueCompruebo() throws Exception {
+    int[] tiedRatings = {0, 10, 14, 100, 200, 4};          // preparar
+    int[] result = algorithm.findClosestPair(tiedRatings);  // ejecutar
+    assertArrayEquals(new int[] {1, 2}, result);            // comprobar
+}
+</code></pre></div>
+<ul>
+<li>Usar siempre el atributo <strong><code>algorithm</code></strong> (nunca <code>new ...</code> dentro).</li>
+<li>Sin mocks, sin <code>@ParameterizedTest</code>, métodos <code>@Test</code> sin parámetros.</li>
+<li>Excepciones <strong>siempre</strong> con <code>assertThrows</code> (otra excepción no cuenta como cazada).</li>
+<li><code>new int[] {..}</code> al pasarlo directo; <code>{..}</code> solo al declarar.</li>
+<li>Variable usada en lambda → no reasignarla.</li>
+</ul>
+<p><strong>Cazar un bug:</strong> leer <code>// Bug:</code> → ¿cuándo se nota? → entrada mínima donde buena y mala difieren → simular a mano.</p>
+</section>
+<section class="sec cat-react"><h2 id="9-react"><span class="chip">React</span>9. REACT</h2>
+<div class="checklist"><h3 class="cl-h" id="checklist_9">Checklist <span class="prog"></span></h3><ul>
+<li class="task"><label><input type="checkbox" data-k="c78"><span><code>npm install</code> hecho (una vez)</span></label></li>
+<li class="task"><label><input type="checkbox" data-k="c79"><span>Leer el test: roles (<code>heading</code>, <code>list</code>, <code>table</code>), textos exactos y orden de columnas</span></label></li>
+<li class="task"><label><input type="checkbox" data-k="c80"><span>Imports (<code>useState</code>, <code>useEffect</code>, <code>Table</code>, <code>tokenService</code>)</span></label></li>
+<li class="task"><label><input type="checkbox" data-k="c81"><span><code>useState([])</code> + <code>useEffect</code> con <code>fetch</code> a la URL exacta</span></label></li>
+<li class="task"><label><input type="checkbox" data-k="c82"><span>Títulos con el nivel exacto (<code>&lt;h1&gt;</code>, <code>&lt;h3&gt;</code>)</span></label></li>
+<li class="task"><label><input type="checkbox" data-k="c83"><span><code>map</code> con <code>key</code> (e <code>id</code> si lo piden)</span></label></li>
+<li class="task"><label><input type="checkbox" data-k="c84"><span>Caso vacío (<code>&lt;h1&gt;...&lt;/h1&gt;</code> en vez de tabla)</span></label></li>
+<li class="task"><label><input type="checkbox" data-k="c85"><span><code>?.</code> en campos que pueden ser <code>null</code></span></label></li>
+<li class="task"><label><input type="checkbox" data-k="c86"><span><code>npm test</code> y pulsar <code>a</code></span></label></li>
+</ul></div>
+<p><strong>Lista desde props</strong> (ejemplo en el proyecto: <code>admin/users/UserListAdmin.js</code>):</p>
+<div class="code" data-lang="jsx"><div class="code-h"><span>React</span><button class="copy" type="button">Copiar</button></div><pre><code class="language-jsx">export default function XDetail({ items }) {
+    return (
+        &lt;ul&gt;
+            {items.map((e) =&gt; (
+                &lt;li key={e.user.id} id={`item-${e.user.id}`}&gt;
+                    {`${e.user.username} - ${e.points}`}
+                &lt;/li&gt;
+            ))}
+        &lt;/ul&gt;
+    );
+}
+</code></pre></div>
+<p><strong>Fetch a la API:</strong></p>
+<div class="code" data-lang="jsx"><div class="code-h"><span>React</span><button class="copy" type="button">Copiar</button></div><pre><code class="language-jsx">import { useEffect, useState } from &quot;react&quot;;
+import tokenService from &quot;../services/token.service&quot;;
+
+export default function X({ id }) {
+    const [data, setData] = useState([]);
+    const jwt = tokenService.getLocalAccessToken();
+
+    useEffect(() =&gt; {
+        fetch(`/api/v1/xs/${id}/algo`, { headers: { Authorization: `Bearer ${jwt}` } })
+            .then((res) =&gt; res.json())
+            .then((json) =&gt; setData(Array.isArray(json) ? json : []));
+    }, [id, jwt]);
+
+    return (
+        &lt;div&gt;
+            &lt;h1&gt;Título&lt;/h1&gt;
+            {data.length &gt; 0 &amp;&amp; &lt;div&gt;{`Leader: ${data[0].user.username} (${data[0].points} points)`}&lt;/div&gt;}
+        &lt;/div&gt;
+    );
+}
+</code></pre></div>
+<p><strong>Tabla o <code>&lt;h1&gt;</code> si está vacía</strong> (controles anteriores):</p>
+<div class="code" data-lang="jsx"><div class="code-h"><span>React</span><button class="copy" type="button">Copiar</button></div><pre><code class="language-jsx">import { Table } from &quot;reactstrap&quot;;
+
+return data.length === 0 ? (
+    &lt;h1&gt;NO MATCHES&lt;/h1&gt;
+) : (
+    &lt;Table&gt;
+        &lt;thead&gt;
+            &lt;tr&gt;&lt;th&gt;Name&lt;/th&gt;&lt;th&gt;Start&lt;/th&gt;&lt;th&gt;Winner&lt;/th&gt;&lt;/tr&gt;
+        &lt;/thead&gt;
+        &lt;tbody&gt;
+            {data.map((m) =&gt; (
+                &lt;tr key={m.id}&gt;
+                    &lt;td&gt;{m.name}&lt;/td&gt;
+                    &lt;td&gt;{m.start}&lt;/td&gt;
+                    &lt;td&gt;{m.winner?.username}&lt;/td&gt;   {/* ?. por si es null */}
+                &lt;/tr&gt;
+            ))}
+        &lt;/tbody&gt;
+    &lt;/Table&gt;
+);
+</code></pre></div>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>JSX</th>
+<th>Significado</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>{ ... }</code></td>
+<td>Meter JavaScript en el HTML</td>
+</tr>
+<tr>
+<td><code>`a ${x} b`</code></td>
+<td>Texto con variables</td>
+</tr>
+<tr>
+<td><code>cond &amp;&amp; &lt;X/&gt;</code></td>
+<td>Pintar X solo si cond</td>
+</tr>
+<tr>
+<td><code>cond ? &lt;A/&gt; : &lt;B/&gt;</code></td>
+<td>A o B</td>
+</tr>
+<tr>
+<td><code>obj?.campo</code></td>
+<td>No petar si obj es null</td>
+</tr>
+<tr>
+<td><code>key</code></td>
+<td>Interno de React (no es <code>id</code>)</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="tabla-con-props-controles-g1-g2-g3">Tabla con <code>props</code> (controles G1, G2, G3)</h3>
+<p>(G1, G2, G3)</p>
+<div class="code" data-lang="jsx"><div class="code-h"><span>React</span><button class="copy" type="button">Copiar</button></div><pre><code class="language-jsx">export default function StandingsListing(props) {          // viene así: usar props.seasonId
+    const [ratings, setRatings] = useState([]);
+    const jwt = tokenService.getLocalAccessToken();
+
+    useEffect(() =&gt; {
+        fetch(`/api/v1/seasons/${props.seasonId}/standings`, { headers: { Authorization: `Bearer ${jwt}` } })
+            .then((res) =&gt; res.json())
+            .then((json) =&gt; setRatings(Array.isArray(json) ? json : []));
+    }, [props.seasonId, jwt]);
+
+    if (ratings.length === 0) return &lt;h1&gt;NOT ENOUGH MATCHES&lt;/h1&gt;;
+
+    return (
+        &lt;Table&gt;
+            &lt;thead&gt;
+                &lt;tr&gt;&lt;th&gt;Player&lt;/th&gt;&lt;th&gt;ELO&lt;/th&gt;&lt;th&gt;Wins&lt;/th&gt;&lt;th&gt;Losses&lt;/th&gt;&lt;th&gt;Draws&lt;/th&gt;&lt;th&gt;Win %&lt;/th&gt;&lt;/tr&gt;
+            &lt;/thead&gt;
+            &lt;tbody&gt;
+                {ratings.map((r) =&gt; (
+                    &lt;tr key={r.id}&gt;
+                        &lt;td&gt;{r.player.username}&lt;/td&gt;
+                        &lt;td&gt;{r.elo}&lt;/td&gt;
+                        &lt;td&gt;{r.wins}&lt;/td&gt;
+                        &lt;td&gt;{r.losses}&lt;/td&gt;
+                        &lt;td&gt;{r.draws}&lt;/td&gt;
+                        &lt;td&gt;{r.winRate}&lt;/td&gt;
+                    &lt;/tr&gt;
+                ))}
+            &lt;/tbody&gt;
+        &lt;/Table&gt;
+    );
+}
+</code></pre></div>
+<ul>
+<li>Los tests comprueban las celdas <strong>por posición</strong> → columnas en el orden exacto del enunciado.</li>
+<li>Fechas y números <strong>tal cual llegan</strong> (los tests comparan con el valor del JSON, sin formatear).</li>
+<li>Campos que pueden ser <code>null</code> (ganador, fecha de fin): <code>{m.winner?.username}</code>.</li>
+<li>Imports: <code>import { useEffect, useState } from "react";</code>, <code>import { Table } from "reactstrap";</code>, <code>import tokenService from "../services/token.service";</code></li>
+</ul>
+</section>
+<section class="sec cat-setup"><h2 id="10-entrega-git"><span class="chip">Git</span>10. ENTREGA (GIT)</h2>
+<div class="checklist"><h3 class="cl-h" id="checklist_10">Checklist <span class="prog"></span></h3><ul>
+<li class="task"><label><input type="checkbox" data-k="c87"><span><code>./mvnw compile</code> sin errores (si no compila = 0)</span></label></li>
+<li class="task"><label><input type="checkbox" data-k="c88"><span><code>./mvnw test</code>: revisar cuántos pasan</span></label></li>
+<li class="task"><label><input type="checkbox" data-k="c89"><span><code>git config</code> de nombre y email</span></label></li>
+<li class="task"><label><input type="checkbox" data-k="c90"><span><code>git status</code>: no subir <code>node_modules</code> ni <code>target</code></span></label></li>
+<li class="task"><label><input type="checkbox" data-k="c91"><span><code>git add</code> + <code>git commit</code></span></label></li>
+<li class="task"><label><input type="checkbox" data-k="c92"><span><code>git push</code> (contraseña = token)</span></label></li>
+<li class="task"><label><input type="checkbox" data-k="c93"><span>Ver el commit en github.com</span></label></li>
+<li class="task"><label><input type="checkbox" data-k="c94"><span><strong>Antes</strong> de cerrar sesión y salir del aula</span></label></li>
+</ul></div>
+<div class="code" data-lang="bash"><div class="code-h"><span>Terminal Linux</span><button class="copy" type="button">Copiar</button></div><pre><code class="language-bash">./mvnw test               # o al menos ./mvnw compile → si no compila = 0
+git status
+git add .
+git commit -m &quot;Control DP1&quot;
+git push                  # contraseña = token
+</code></pre></div>
+<p class="callout warn"><span class="ico" aria-hidden="true">!</span><span class="txt">Push <strong>antes</strong> de cerrar sesión y salir del aula.
+✍️ Mi token está guardado en: <strong><em>_</em></strong><strong><em>_</em></strong></span></p>
+<h3 id="cuando-git-falla">Cuando git falla</h3>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Síntoma</th>
+<th>Causa</th>
+<th>Solución</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Pide <code>Password</code> al clonar o hacer push</td>
+<td>GitHub ya no acepta la contraseña</td>
+<td>Pegar el <strong>token</strong> (no se ve al pegarlo, es normal)</td>
+</tr>
+<tr>
+<td><code>Authentication failed</code></td>
+<td>Token mal copiado, caducado o sin permiso <code>repo</code></td>
+<td>Generar otro token en GitHub → <em>Settings</em> → <em>Developer settings</em></td>
+</tr>
+<tr>
+<td><code>Author identity unknown</code> / <code>Please tell me who you are</code> al hacer commit</td>
+<td>El ordenador del aula no sabe quién eres</td>
+<td>Los dos <code>git config</code> de abajo y repetir el commit</td>
+</tr>
+<tr>
+<td><code>nothing to commit, working tree clean</code></td>
+<td>No has guardado los ficheros o ya estaba todo commiteado</td>
+<td>Ctrl+S en VS Code y <code>git status</code></td>
+</tr>
+<tr>
+<td><code>Updates were rejected ... fetch first</code></td>
+<td>El remoto tiene commits que tú no tienes</td>
+<td><code>git pull --rebase</code> y después <code>git push</code></td>
+</tr>
+<tr>
+<td><code>src refspec main does not match any</code></td>
+<td>No hay ningún commit todavía, o la rama se llama distinto</td>
+<td><code>git commit</code> primero; <code>git branch</code> para ver el nombre</td>
+</tr>
+<tr>
+<td><code>git status</code> muestra <code>node_modules/</code> o <code>target/</code></td>
+<td>Ficheros generados que no deben subirse</td>
+<td>Normalmente ya están en <code>.gitignore</code>; si no, no hacer <code>git add .</code> sino añadir carpetas concretas</td>
+</tr>
+<tr>
+<td>He tocado los tests sin querer</td>
+<td>—</td>
+<td><code>git checkout -- src/test</code> (los restaura; de todos modos se evalúan los originales)</td>
+</tr>
+</tbody>
+</table></div>
+<div class="code" data-lang="bash"><div class="code-h"><span>Terminal Linux</span><button class="copy" type="button">Copiar</button></div><pre><code class="language-bash">git config --global user.name &quot;Eduardo Cruz Romero&quot;
+git config --global user.email &quot;tu-email-de-github&quot;
+
+git status                  # qué ha cambiado
+git log --oneline -3        # últimos commits
+git branch                  # en qué rama estoy
+git push origin main        # push explícito a la rama main
+</code></pre></div>
+<p class="callout ok"><span class="ico" aria-hidden="true">✓</span><span class="txt"><strong>Comprobar al final</strong> en github.com que el último commit aparece en el repositorio.</span></p>
+</section>
+<section class="sec cat-plan"><h2 id="11-estrategia"><span class="chip">Plan</span>11. ESTRATEGIA</h2>
+<ul>
+<li>Orden recomendado: entidades → relaciones → data.sql → servicio → controlador → tests → React → consulta difícil al final.</li>
+<li>Atascado más de 10 min → siguiente ejercicio (la nota es proporcional a los tests que pasan).</li>
+<li>Lanzar los tests ya hechos de vez en cuando para comprobar que no he roto nada.</li>
+<li>Imports del test = pistas de qué anotaciones usar.</li>
+<li class="li-warn">Google: saltar las «Vistas creadas con IA».</li>
+<li>Plantillas: cambiar <strong>todo</strong> lo de ejemplo (<code>xs</code>, <code>X</code>, <code>getPoints</code> → el getter real).</li>
+<li><code>@Transactional</code> siempre el de <strong>Spring</strong> (<code>org.springframework.transaction.annotation</code>), no el de <code>jakarta</code>.</li>
+<li>Copilot solo autocompletado; nada de chat, comentarios-instrucción ni «Fix with Copilot».</li>
+</ul>
+<p class="callout mine"><span class="ico" aria-hidden="true">✎</span><span class="txt"><strong>Notas mías:</strong></span></p>
+<ul>
+<li>…</li>
+<li>…</li>
+<li>…</li>
+</ul>
+</section>
+<section class="sec cat-ex"><h2 id="12-ejemplos-resueltos"><span class="chip">Ejemplos</span>12. EJEMPLOS RESUELTOS</h2>
+<blockquote class="callout info">
+<p>Un ejemplo completo de cada tipo de ejercicio, en el orden del examen. Copiar la <strong>forma</strong> y cambiar nombres, rutas y getters.
+<strong>Simulacro</strong> = probado con los tests. <strong>G1 / G2 / G3</strong> = controles 2025-26, escrito a partir de sus tests.</p>
+</blockquote>
+<h3 id="ej-1-entidad-con-validaciones-enum-y-relaciones-simulacro">Ej. 1 · Entidad con validaciones, enum y relaciones (Simulacro)</h3>
+<div class="code" data-lang="java"><div class="code-h"><span>Java</span><button class="copy" type="button">Copiar</button></div><pre><code class="language-java">@Entity
+@Getter
+@Setter
+public class ChallengeAnnouncement extends BaseEntity {
+
+    @NotNull
+    @Size(min = 10, max = 60)
+    String message;
+
+    @NotNull
+    @Enumerated(EnumType.STRING)
+    AnnouncementStatus status;
+
+    LocalDateTime sentAt;                      // opcional: sin anotación
+
+    @NotNull
+    @ManyToOne
+    FriendlyChallenge challenge;               // UML: 0..n --&gt; 1
+
+    @NotNull
+    @Size(min = 2)
+    @ManyToMany
+    @JoinTable(name = &quot;announcement_recipients&quot;,
+        joinColumns = @JoinColumn(name = &quot;announcement_id&quot;),
+        inverseJoinColumns = @JoinColumn(name = &quot;user_id&quot;))
+    List&lt;User&gt; recipients;                     // UML: 0..n --&gt; 2..n
+}
+
+public interface ChallengeAnnouncementRepository extends CrudRepository&lt;ChallengeAnnouncement, Integer&gt; {
+    Optional&lt;ChallengeAnnouncement&gt; findById(Integer id);
+}
+</code></pre></div>
+<h3 id="ej-2-entidad-con-atributo-derivado-y-manytoone-obligatorio-g3">Ej. 2 · Entidad con atributo derivado y <code>@ManyToOne</code> obligatorio (G3)</h3>
+<div class="code" data-lang="java"><div class="code-h"><span>Java</span><button class="copy" type="button">Copiar</button></div><pre><code class="language-java">@Entity
+@Getter
+@Setter
+public class Rating extends BaseEntity {      // el &quot;Integer id;&quot; que traía: BORRADO
+
+    @NotNull @Min(100) Integer elo;
+    @NotNull @Min(0)   Integer wins;
+    @NotNull @Min(0)   Integer losses;
+    @NotNull @Min(0)   Integer draws;
+
+    @Transient                                  // &quot;/winRate&quot; en el UML: no se guarda
+    public Double getWinRate() {
+        int total = wins + losses;
+        return total == 0 ? 0.0 : (double) wins / total;
+    }
+
+    @NotNull
+    @ManyToOne
+    User player;                                // UML: 0..n --&gt; 1
+}
+</code></pre></div>
+<h3 id="ej-3-entidad-con-onetomany-y-notblank-g3">Ej. 3 · Entidad con <code>@OneToMany</code> y <code>@NotBlank</code> (G3)</h3>
+<div class="code" data-lang="java"><div class="code-h"><span>Java</span><button class="copy" type="button">Copiar</button></div><pre><code class="language-java">@Entity
+@Getter
+@Setter
+public class Season extends BaseEntity {
+
+    @NotBlank
+    @Size(min = 3, max = 50)
+    String name;
+
+    @NotNull LocalDate startDate;
+    @NotNull LocalDate endDate;
+
+    @OneToMany
+    List&lt;ChessMatch&gt; matches;                   // UML: 0..1 --&gt; 0..n
+
+    @OneToMany
+    List&lt;Rating&gt; ratings;                       // UML: 1 --&gt; 0..n
+}
+
+// En Community (ya era entidad): UML 1 --&gt; 1..n
+@NotNull
+@Size(min = 1)
+@OneToMany
+List&lt;Season&gt; seasons;
+</code></pre></div>
+<h3 id="ej-4-datasql-con-manytoone-y-tabla-intermedia-simulacro">Ej. 4 · <code>data.sql</code> con <code>@ManyToOne</code> y tabla intermedia (Simulacro)</h3>
+<div class="code" data-lang="sql"><div class="code-h"><span>SQL</span><button class="copy" type="button">Copiar</button></div><pre><code class="language-sql">INSERT INTO challenge_announcement (id, message, status, sent_at, challenge_id) VALUES
+    (1, 'Remember to submit your match results by Friday', 'SENT', '2026-07-01 10:00:00', 1),
+    (2, 'New format proposal for next season', 'DRAFT', NULL, 1),
+    (3, 'Please confirm your availability for August', 'SENT', '2026-08-02 09:30:00', 2);
+
+INSERT INTO announcement_response (id, message, status, responded_at, announcement_id, recipient_id) VALUES
+    (1, 'Got it, will submit by Friday', 'ACCEPTED', '2026-07-01 11:00:00', 1, 4),
+    (2, 'Sounds good to me', 'ACCEPTED', '2026-08-02 10:00:00', 3, 5),
+    (3, 'I can''t make it in August', 'DECLINED', '2026-08-02 12:00:00', 3, 6);
+
+INSERT INTO announcement_recipients (announcement_id, user_id) VALUES
+    (1, 4), (1, 5),
+    (2, 4), (2, 5),
+    (3, 5), (3, 6), (3, 7);
+</code></pre></div>
+<h3 id="ej-5-datasql-con-localdate-manytoone-y-onetomany-g3">Ej. 5 · <code>data.sql</code> con <code>LocalDate</code>, <code>@ManyToOne</code> y <code>@OneToMany</code> (G3)</h3>
+<div class="code" data-lang="sql"><div class="code-h"><span>SQL</span><button class="copy" type="button">Copiar</button></div><pre><code class="language-sql">INSERT INTO season (id, name, start_date, end_date) VALUES
+    (1, 'Juegos Municipales 2024-25', '2024-09-01', '2025-05-31'),
+    (2, 'Temporada Oficial 2025-26', '2025-10-15', '2026-06-15');
+
+INSERT INTO rating (id, elo, wins, losses, draws, player_id) VALUES
+    (1, 1560, 4, 2, 1, 4),
+    (2, 1250, 2, 2, 0, 5),
+    (3, 1000, 0, 0, 4, 6),
+    (4, 2080, 8, 1, 2, 4),
+    (5, 1310, 4, 6, 1, 5),
+    (6, 1567, 2, 0, 0, 6);
+
+-- Tablas intermedias de los @OneToMany (comprobar nombres en el create table)
+INSERT INTO season_ratings (season_id, ratings_id) VALUES
+    (1, 1), (1, 2), (1, 3), (2, 4), (2, 5), (2, 6);
+INSERT INTO season_matches (season_id, matches_id) VALUES
+    (1, 1), (1, 2), (1, 3), (2, 4), (2, 5), (2, 6);
+INSERT INTO community_seasons (community_id, seasons_id) VALUES
+    (1, 1), (1, 2);
+</code></pre></div>
+<h3 id="ej-6-repositorio-por-nombre-con-filtro-y-agregado-g1-g2-simulacro">Ej. 6 · Repositorio: por nombre, con filtro y agregado (G1, G2, Simulacro)</h3>
+<div class="code" data-lang="java"><div class="code-h"><span>Java</span><button class="copy" type="button">Copiar</button></div><pre><code class="language-java">// G1: por nombre del método (type es un PieceType con atributo name)
+List&lt;Piece&gt; findByColorAndTypeName(PieceColor color, String typeName);
+
+// G2: filtro con parámetros por posición y tamaño de una colección
+@Query(&quot;SELECT p FROM ChessProblem p WHERE p.difficultyLevel &gt;= ?1 AND SIZE(p.board.pieces) &lt; ?2&quot;)
+List&lt;ChessProblem&gt; findByDifficultyAndNumPieces(Integer difficultyLevel, Integer numPieces);
+
+// Simulacro: agregado con SUM(CASE), GROUP BY y ORDER BY
+@Query(&quot;SELECT u, SUM(CASE WHEN m.winner = u THEN 2 WHEN m.winner IS NULL THEN 1 ELSE 0 END) &quot;
+     + &quot;FROM FriendlyChallenge fc JOIN fc.matches m JOIN fc.participants u &quot;
+     + &quot;WHERE fc.id = :challengeId AND m.finish IS NOT NULL AND (m.white = u OR m.black = u) &quot;
+     + &quot;GROUP BY u ORDER BY 2 DESC&quot;)
+List&lt;Object[]&gt; findParticipantPoints(@Param(&quot;challengeId&quot;) Integer challengeId);
+</code></pre></div>
+<h3 id="ej-7-servicio-crud-regla-de-negocio-con-rollback-simulacro">Ej. 7 · Servicio CRUD + regla de negocio con rollback (Simulacro)</h3>
+<div class="code" data-lang="java"><div class="code-h"><span>Java</span><button class="copy" type="button">Copiar</button></div><pre><code class="language-java">@Service
+public class ChessMatchService {
+
+    ChessMatchRepository repo;
+
+    @Autowired
+    public ChessMatchService(ChessMatchRepository repo) { this.repo = repo; }
+
+    @Transactional(readOnly = true)
+    public List&lt;ChessMatch&gt; findAll() { return repo.findAll(); }
+
+    @Transactional(readOnly = true)
+    public Optional&lt;ChessMatch&gt; findById(Integer id) { return repo.findById(id); }
+
+    @Transactional(rollbackFor = InvalidWinnerException.class)
+    public ChessMatch save(ChessMatch match) throws InvalidWinnerException {
+        User winner = match.getWinner();
+        boolean valid = winner == null || winner == match.getWhite() || winner == match.getBlack();
+        if (!valid) {
+            throw new InvalidWinnerException();      // antes de repo.save
+        }
+        return repo.save(match);
+    }
+}
+</code></pre></div>
+<h3 id="ej-8-regla-con-bucles-anidados-y-regla-en-negativo-g3">Ej. 8 · Regla con bucles anidados y regla en negativo (G3)</h3>
+<div class="code" data-lang="java"><div class="code-h"><span>Java</span><button class="copy" type="button">Copiar</button></div><pre><code class="language-java">@Transactional(rollbackFor = MalformedCommunityException.class)
+public Community save(Community c) throws MalformedCommunityException {
+    // Regla 1: cada miembro ha jugado al menos 2 partidas en las temporadas de la comunidad
+    for (User u : c.getMembers()) {
+        int played = 0;
+        for (Season s : c.getSeasons()) {
+            for (ChessMatch m : s.getMatches()) {
+                if (m.getWhitePlayer().getId().equals(u.getId())
+                 || m.getBlackPlayer().getId().equals(u.getId())) {
+                    played++;
+                }
+            }
+        }
+        if (played &lt; 2) throw new MalformedCommunityException(&quot;Member with fewer than 2 matches&quot;);
+    }
+    // Regla 2: &quot;no superior al máximo&quot; → error cuando es MAYOR
+    if (c.getMembers().size() &gt; c.getMaxPlayers()) {
+        throw new MalformedCommunityException(&quot;Too many members&quot;);
+    }
+    return repo.save(c);
+}
+</code></pre></div>
+<h3 id="ej-9-servicio-con-comprobaciones-404403-y-conversion-object-simulacro">Ej. 9 · Servicio con comprobaciones 404/403 y conversión <code>Object[]</code> (Simulacro)</h3>
+<div class="code" data-lang="java"><div class="code-h"><span>Java</span><button class="copy" type="button">Copiar</button></div><pre><code class="language-java">@Transactional(readOnly = true)
+public List&lt;RankingEntry&gt; getRanking(Integer challengeId) {
+    FriendlyChallenge challenge = findById(challengeId);              // 404 si no existe
+
+    User current = userService.findCurrentUser();
+    boolean isParticipant = false;
+    for (User p : challenge.getParticipants()) {
+        if (p.getId().equals(current.getId())) { isParticipant = true; break; }
+    }
+    if (!isParticipant) throw new AccessDeniedException(&quot;Not a participant&quot;);   // 403 (del proyecto)
+
+    List&lt;Object[]&gt; rows = repo.findParticipantPoints(challengeId);
+    if (rows.isEmpty()) throw new ResourceNotFoundException(&quot;No finished matches&quot;);  // 404
+
+    List&lt;RankingEntry&gt; ranking = new ArrayList&lt;&gt;();
+    for (Object[] r : rows) {
+        ranking.add(new RankingEntry((User) r[0], ((Number) r[1]).longValue()));
+    }
+    ranking.sort(Comparator.comparing(RankingEntry::getPoints).reversed());
+    return ranking;
+}
+</code></pre></div>
+<h3 id="ej-10-servicio-que-recibe-la-entidad-y-devuelve-null-si-no-existe-g3">Ej. 10 · Servicio que recibe la entidad y devuelve <code>null</code> si no existe (G3)</h3>
+<div class="code" data-lang="java"><div class="code-h"><span>Java</span><button class="copy" type="button">Copiar</button></div><pre><code class="language-java">@Service
+public class SeasonService {
+    SeasonRepository repository;
+
+    public SeasonService(Optional&lt;SeasonRepository&gt; repository) {   // venía así: no tocar
+        this.repository = repository.isPresent() ? repository.get() : null;
+    }
+
+    @Transactional(readOnly = true)
+    public List&lt;Rating&gt; getStandings(Season s) {
+        List&lt;Rating&gt; ratings = new ArrayList&lt;&gt;(s.getRatings());
+        ratings.sort(Comparator.comparing(Rating::getElo).reversed());
+        return ratings;
+    }
+
+    @Transactional(readOnly = true)
+    public List&lt;Season&gt; getAll() { return repository.findAll(); }
+
+    @Transactional(readOnly = true)
+    public Season getById(Integer i) { return repository.findById(i).orElse(null); }
+
+    @Transactional
+    public Season save(Season season) { return repository.save(season); }
+}
+</code></pre></div>
+<h3 id="ej-11-controladores-simulacro-y-g3-seguridad">Ej. 11 · Controladores (Simulacro y G3) + seguridad</h3>
+<div class="code" data-lang="java"><div class="code-h"><span>Java</span><button class="copy" type="button">Copiar</button></div><pre><code class="language-java">// Simulacro: el servicio lanza las excepciones; el controlador solo llama
+@GetMapping(&quot;{id}/ranking&quot;)
+public ResponseEntity&lt;List&lt;RankingEntry&gt;&gt; getRanking(@PathVariable(&quot;id&quot;) Integer id) {
+    return new ResponseEntity&lt;&gt;(service.getRanking(id), HttpStatus.OK);
+}
+
+// G3: el servicio devuelve null; el controlador da el 404
+@RestController
+@RequestMapping(&quot;/api/v1/seasons&quot;)
+public class SeasonController {
+    SeasonService seasonService;
+    UserService userService;
+
+    @Autowired
+    public SeasonController(SeasonService service, UserService userService) {
+        this.seasonService = service;
+        this.userService = userService;
+    }
+
+    @GetMapping
+    public ResponseEntity&lt;List&lt;Season&gt;&gt; getAll() {
+        return new ResponseEntity&lt;&gt;(seasonService.getAll(), HttpStatus.OK);
+    }
+
+    @GetMapping(&quot;{id}/standings&quot;)
+    public ResponseEntity&lt;List&lt;Rating&gt;&gt; getStandings(@PathVariable(&quot;id&quot;) Integer id) {
+        Season season = seasonService.getById(id);
+        if (season == null) throw new ResourceNotFoundException(&quot;Season&quot;, &quot;id&quot;, id);
+        return new ResponseEntity&lt;&gt;(seasonService.getStandings(season), HttpStatus.OK);
+    }
+}
+</code></pre></div>
+<div class="code" data-lang="java"><div class="code-h"><span>Java</span><button class="copy" type="button">Copiar</button></div><pre><code class="language-java">// SecurityConfiguration: ANTES de .anyRequest()
+.requestMatchers(&quot;/api/v1/matches/**&quot;).hasAnyAuthority(PLAYER)
+.requestMatchers(&quot;/api/v1/seasons/**&quot;).hasAuthority(PLAYER)
+.anyRequest().authenticated())
+</code></pre></div>
+<h3 id="ej-12-tests-junit-que-cazan-implementaciones-con-errores-simulacro">Ej. 12 · Tests JUnit que cazan implementaciones con errores (Simulacro)</h3>
+<div class="code" data-lang="java"><div class="code-h"><span>Java</span><button class="copy" type="button">Copiar</button></div><pre><code class="language-java">public class ClosestRatingPairFinderTest {
+
+    ClosestRatingPairFinder algorithm = new ValidClosestRatingPairFinder();
+
+    @Test
+    public void findsClosestPairInSimpleCase() throws Exception {
+        int[] ratings = {1000, 1200, 1050};
+        assertArrayEquals(new int[] {0, 2}, algorithm.findClosestPair(ratings));
+    }
+
+    @Test   // caza a Naive (desempate)
+    public void tieIsBrokenBySmallestIndexSum() throws Exception {
+        int[] tiedRatings = {0, 10, 14, 100, 200, 4};
+        assertArrayEquals(new int[] {1, 2}, algorithm.findClosestPair(tiedRatings));
+    }
+
+    @Test   // caza a Careless (negativos)
+    public void negativeRatingThrowsInvalidRating() {
+        int[] ratingsWithNegative = {1500, -1, 1600};
+        assertThrows(InvalidRatingException.class, () -&gt; algorithm.findClosestPair(ratingsWithNegative));
+    }
+
+    @Test   // caza a Reckless (tamaño)
+    public void singlePlayerThrowsInsufficientPlayers() {
+        int[] singlePlayer = {1500};
+        assertThrows(InsufficientPlayersException.class, () -&gt; algorithm.findClosestPair(singlePlayer));
+    }
+
+    public void setAlgorithm(ClosestRatingPairFinder value) { this.algorithm = value; }
+}
+</code></pre></div>
+<h3 id="ej-13-react-fetch-lista-tabla-simulacro-y-g3">Ej. 13 · React: fetch + lista + tabla (Simulacro y G3)</h3>
+<div class="code" data-lang="jsx"><div class="code-h"><span>React</span><button class="copy" type="button">Copiar</button></div><pre><code class="language-jsx">// Simulacro: challenge.js (fetch + títulos + líder)
+export default function Challenge({ challengeId }) {
+    const [ranking, setRanking] = useState([]);
+    const jwt = tokenService.getLocalAccessToken();
+
+    useEffect(() =&gt; {
+        fetch(`/api/v1/challenges/${challengeId}/ranking`, { headers: { Authorization: `Bearer ${jwt}` } })
+            .then((res) =&gt; res.json())
+            .then((data) =&gt; setRanking(Array.isArray(data) ? data : []));
+    }, [challengeId, jwt]);
+
+    const leader = ranking.length &gt; 0 ? ranking[0] : null;
+    return (
+        &lt;div&gt;
+            &lt;h1&gt;Challenge info&lt;/h1&gt;
+            &lt;h3&gt;Ranking&lt;/h3&gt;
+            {leader &amp;&amp; &lt;div&gt;{`Leader: ${leader.user.username} (${leader.points} points)`}&lt;/div&gt;}
+        &lt;/div&gt;
+    );
+}
+
+// Simulacro: challengeDetail.js (lista desde props)
+export default function ChallengeDetail({ ranking }) {
+    return (
+        &lt;div&gt;
+            &lt;ul&gt;
+                {ranking.map((entry) =&gt; (
+                    &lt;li key={entry.user.id} id={`ranking-${entry.user.id}`}&gt;
+                        {`${entry.user.username} - ${entry.points}`}
+                    &lt;/li&gt;
+                ))}
+            &lt;/ul&gt;
+        &lt;/div&gt;
+    );
+}
+</code></pre></div>
+<p>La versión con <strong>tabla y <code>&lt;h1&gt;</code> si está vacía</strong> (G3, <code>StandingsListing</code>) está en la sección 9 → «Tabla con <code>props</code>».</p></section>
+</div></main>
+</div>
+<button id="top" type="button" aria-label="Volver arriba">↑</button>
+<script>
+(function(){
+const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
+const store={get(k,d){try{return JSON.parse(localStorage.getItem(k))??d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+
+/* ---------- Resaltado de sintaxis (sin librerías, funciona sin internet) ---------- */
+const KW={
+ java:'abstract|boolean|break|case|catch|class|continue|default|do|double|else|enum|extends|final|for|if|implements|import|instanceof|int|interface|long|new|null|package|private|protected|public|return|static|super|switch|this|throw|throws|try|void|while|true|false|var',
+ jsx:'import|from|export|default|function|return|const|let|var|if|else|true|false|null|new|async|await',
+ sql:'INSERT|INTO|VALUES|SELECT|FROM|WHERE|AND|OR|NULL|TRUE|FALSE|JOIN|GROUP|BY|ORDER|DESC|ASC|AS|IS|NOT|CASE|WHEN|THEN|ELSE|END|SUM|COUNT|SIZE|LIKE|BETWEEN',
+ bash:'git|cd|code|chmod|npm|grep|tail|clone|add|commit|push|pull|status|log|branch|config|test|install|compile',
+ powershell:'Select-String|Select-Object|git|cd|code|npm|test|install'
+};
+function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+function highlight(code,lang){
+  const kw=KW[lang]; if(!kw) return esc(code);
+  const NO=/(?!)/.source;
+  const parts=[
+    lang==='sql'?/(--[^\n]*)/.source:(lang==='bash'||lang==='powershell')?/(#[^\n]*)/.source:/(\/\/[^\n]*|\/\*[\s\S]*?\*\/)/.source,
+    /("(?:[^"\\\n]|\\.)*"|'(?:[^'\\\n]|\\.)*'|`(?:[^`\\]|\\.)*`)/.source,
+    lang==='java'?/(@[A-Za-z]\w*)/.source:'('+NO+')',
+    '\\b('+kw+')\\b',
+    /\b(\d+(?:\.\d+)?L?)\b/.source,
+    lang==='java'?/\b([A-Z][A-Za-z0-9_]*)\b/.source:lang==='jsx'?/(<\/?[A-Za-z][\w.]*)/.source:'('+NO+')'
+  ];
+  const re=new RegExp(parts.join('|'),'g'); let out='',last=0,m;
+  const cls=['tk-com','tk-str','tk-ann','tk-kw','tk-num',lang==='java'?'tk-type':'tk-tag'];
+  while((m=re.exec(code))){
+    out+=esc(code.slice(last,m.index));
+    const i=m.slice(1).findIndex(x=>x!==undefined);
+    out+='<span class="'+cls[i]+'">'+esc(m[0])+'</span>'; last=re.lastIndex;
+  }
+  return out+esc(code.slice(last));
+}
+$$('.code').forEach(b=>{const c=$('code',b);c.innerHTML=highlight(c.textContent,b.dataset.lang)});
+
+/* ---------- Copiar ---------- */
+$$('.copy').forEach(btn=>btn.addEventListener('click',()=>{
+  const code=$('code',btn.closest('.code')).innerText;
+  const ok=()=>{btn.textContent='¡Copiado!';btn.classList.add('done');setTimeout(()=>{btn.textContent='Copiar';btn.classList.remove('done')},1300)};
+  const fallback=()=>{const r=document.createRange();r.selectNodeContents($('code',btn.closest('.code')));const s=getSelection();s.removeAllRanges();s.addRange(r);try{document.execCommand('copy');ok()}catch(e){}};
+  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(code).then(ok,fallback);else fallback();
+}));
+
+/* ---------- Checklists ---------- */
+const KEY='chuleta-dp1-checks'; let st=store.get(KEY,{});
+function progress(){
+  $$('.checklist').forEach(cl=>{
+    const all=$$('input',cl), on=all.filter(i=>i.checked).length, p=$('.prog',cl);
+    p.textContent=on+'/'+all.length; p.classList.toggle('full',on===all.length);
+    let bar=$('.bar',cl); if(!bar){bar=document.createElement('span');bar.className='bar';bar.innerHTML='<i></i>';$('h3',cl).append(bar)}
+    $('i',bar).style.width=(all.length?on/all.length*100:0)+'%';
+  });
+}
+$$('li.task input').forEach(cb=>{
+  cb.checked=!!st[cb.dataset.k]; cb.closest('li').classList.toggle('done',cb.checked);
+  cb.addEventListener('change',()=>{st[cb.dataset.k]=cb.checked;cb.closest('li').classList.toggle('done',cb.checked);store.set(KEY,st);progress()});
+});
+$('#reset').addEventListener('click',()=>{st={};store.set(KEY,st);$$('li.task input').forEach(cb=>{cb.checked=false;cb.closest('li').classList.remove('done')});progress()});
+progress();
+
+/* ---------- Tema ---------- */
+const root=document.documentElement; const th=store.get('chuleta-theme',null); if(th) root.dataset.theme=th;
+$('#theme').addEventListener('click',()=>{
+  const dark=root.dataset.theme?root.dataset.theme==='dark':matchMedia('(prefers-color-scheme: dark)').matches;
+  root.dataset.theme=dark?'light':'dark'; store.set('chuleta-theme',root.dataset.theme);
+});
+
+/* ---------- Búsqueda (sin distinguir mayúsculas ni tildes) ---------- */
+const fold=c=>c.normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase()||c.toLowerCase();
+const main=$('#content'), q=$('#q'), count=$('#count'), filt=$('#filter'), prev=$('#prev'), next=$('#next');
+let hits=[], cur=-1;
+function clear(){ $$('mark.hit',main).forEach(m=>m.replaceWith(document.createTextNode(m.textContent))); main.normalize(); hits=[]; cur=-1; }
+function markNode(n,term){
+  const txt=n.nodeValue; let f=''; for(const ch of txt) f+=fold(ch)[0]||ch;
+  if(f.length!==txt.length) f=txt.toLowerCase();
+  let i=f.indexOf(term); if(i<0) return;
+  const frag=document.createDocumentFragment(); let last=0;
+  while(i>=0){frag.append(txt.slice(last,i)); const m=document.createElement('mark'); m.className='hit'; m.textContent=txt.slice(i,i+term.length); frag.append(m); last=i+term.length; i=f.indexOf(term,last)}
+  frag.append(txt.slice(last)); n.replaceWith(frag);
+}
+function go(i){
+  if(!hits.length) return; hits[cur]?.classList.remove('cur');
+  cur=(i+hits.length)%hits.length; const h=hits[cur]; h.classList.add('cur');
+  h.scrollIntoView({block:'center'}); count.textContent=(cur+1)+' / '+hits.length;
+}
+function run(){
+  clear(); const raw=q.value.trim(); const term=[...raw].map(c=>fold(c)[0]||c).join('');
+  $$('.sec').forEach(s=>s.classList.remove('dim')); $$('.toc li').forEach(l=>l.classList.remove('dim'));
+  count.classList.remove('none'); prev.disabled=next.disabled=true;
+  if(!term){count.textContent='';return}
+  $$('.sec').forEach(sec=>{
+    const w=document.createTreeWalker(sec,NodeFilter.SHOW_TEXT,{acceptNode:n=>n.parentElement.closest('.copy,.chip,.prog,.code-h')?NodeFilter.FILTER_REJECT:NodeFilter.FILTER_ACCEPT});
+    const ns=[]; while(w.nextNode()) ns.push(w.currentNode); ns.forEach(n=>markNode(n,term));
+    const has=!!$('mark.hit',sec);
+    if(filt.checked&&!has){sec.classList.add('dim'); const id=$('h2',sec).id; $(`.toc a[href="#${id}"]`)?.parentElement.classList.add('dim')}
+  });
+  hits=$$('mark.hit',main).filter(m=>!m.closest('.sec.dim'));
+  if(!hits.length){count.textContent='Sin resultados';count.classList.add('none');return}
+  prev.disabled=next.disabled=hits.length<2; go(0);
+}
+let t; q.addEventListener('input',()=>{clearTimeout(t);t=setTimeout(run,120)});
+q.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();go(cur+(e.shiftKey?-1:1))}if(e.key==='Escape'){q.value='';run();q.blur()}});
+prev.addEventListener('click',()=>go(cur-1)); next.addEventListener('click',()=>go(cur+1));
+filt.checked=store.get('chuleta-filter',true); filt.addEventListener('change',()=>{store.set('chuleta-filter',filt.checked);run()});
+document.addEventListener('keydown',e=>{
+  if((e.key==='/'&&document.activeElement!==q&&!/INPUT|TEXTAREA/.test(document.activeElement.tagName))||((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k')){e.preventDefault();q.focus();q.select()}
+});
+
+/* ---------- Índice activo + volver arriba ---------- */
+const links=$$('.toc a'); const byId=Object.fromEntries(links.map(a=>[a.getAttribute('href').slice(1),a]));
+const obs=new IntersectionObserver(es=>es.forEach(en=>{if(en.isIntersecting){links.forEach(l=>l.classList.remove('active'));
+  const a=byId[en.target.id]; if(!a) return; a.classList.add('active');
+  const top=a.closest('.toc>ol>li')?.querySelector(':scope>a'); top&&top.classList.add('active'); a.scrollIntoView({block:'nearest'})}}),{rootMargin:'0px 0px -78% 0px'});
+$$('h2[id],h3[id]',main).forEach(h=>obs.observe(h));
+const topBtn=$('#top'); addEventListener('scroll',()=>topBtn.classList.toggle('show',scrollY>900),{passive:true});
+topBtn.addEventListener('click',()=>scrollTo({top:0}));
+})();
+</script>
+</body></html>
